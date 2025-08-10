@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/foundation.dart';
 import '../models/image_transform_model.dart';
 import '../services/image_service.dart';
 import '../services/image_crop_service.dart';
 import '../widgets/image_cropper_overlay.dart';
 import '../widgets/transformable_image_widget.dart';
 import '../utils/constants.dart';
+import '../utils/log.dart';
 
 /// Main page for image cropping functionality
 class ImageCropperPage extends StatefulWidget {
@@ -20,14 +22,14 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
   late ImageTransformModel _transformModel;
   final GlobalKey _imageCropperKey = GlobalKey();
   final FocusNode _focusNode = FocusNode();
-  
+
   // Mouse interaction state
   bool _isMousePressed = false;
   Offset? _lastMousePosition;
-  
+
   // The size of the square cropping area
   static const double cropSquareSize = AppConstants.cropSquareSize;
-  
+
   @override
   void initState() {
     super.initState();
@@ -41,12 +43,14 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
     _focusNode.dispose();
     super.dispose();
   }
-  
+
   /// Load the default image from assets
   Future<void> _loadImageAsset() async {
     try {
-      final image = await ImageService.loadImageFromAssets(AppConstants.defaultImageAsset);
-      
+      final image = await ImageService.loadImageFromAssets(
+        AppConstants.defaultImageAsset,
+      );
+
       setState(() {
         _transformModel = _transformModel.copyWith(
           originalImage: image,
@@ -64,7 +68,7 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
       final imageFile = await ImageService.pickImageFromGallery();
       if (imageFile != null) {
         final image = await ImageService.xFileToUiImage(imageFile);
-        
+
         setState(() {
           _transformModel = _transformModel.copyWith(
             imageFile: imageFile,
@@ -97,13 +101,13 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
         // Check for modifier keys
         bool isCtrlPressed = HardwareKeyboard.instance.isControlPressed;
         bool isShiftPressed = HardwareKeyboard.instance.isShiftPressed;
-        
+
         if (isCtrlPressed && isShiftPressed) {
           // Ctrl + Shift + Scroll = Precise rotation
           double rotationDelta = event.scrollDelta.dy > 0 ? -0.05 : 0.05;
           double newRotation = _transformModel.imageRotation + rotationDelta;
-          print('DEBUG: Ctrl+Shift+Scroll - Precise rotation: $newRotation');
-          
+          Log.d('Ctrl+Shift+Scroll - Precise rotation: $newRotation');
+
           _transformModel.updateTransformations(
             position: _transformModel.imagePosition,
             scale: _transformModel.imageScale,
@@ -112,9 +116,12 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
         } else if (isCtrlPressed) {
           // Ctrl + Scroll = Precise zoom
           double scaleDelta = event.scrollDelta.dy > 0 ? 0.95 : 1.05;
-          double newScale = (_transformModel.imageScale * scaleDelta).clamp(0.1, 5.0);
-          print('DEBUG: Ctrl+Scroll - Precise zoom: $newScale');
-          
+          double newScale = (_transformModel.imageScale * scaleDelta).clamp(
+            0.1,
+            5.0,
+          );
+          Log.d('Ctrl+Scroll - Precise zoom: $newScale');
+
           _transformModel.updateTransformations(
             position: _transformModel.imagePosition,
             scale: newScale,
@@ -124,8 +131,8 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
           // Shift + Scroll = Rotation
           double rotationDelta = event.scrollDelta.dy > 0 ? -0.1 : 0.1;
           double newRotation = _transformModel.imageRotation + rotationDelta;
-          print('DEBUG: Shift+Scroll - Rotation: $newRotation');
-          
+          Log.d('Shift+Scroll - Rotation: $newRotation');
+
           _transformModel.updateTransformations(
             position: _transformModel.imagePosition,
             scale: _transformModel.imageScale,
@@ -134,9 +141,12 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
         } else {
           // Normal Scroll = Zoom
           double scaleDelta = event.scrollDelta.dy > 0 ? 0.9 : 1.1;
-          double newScale = (_transformModel.imageScale * scaleDelta).clamp(0.5, 3.0);
-          print('DEBUG: Scroll - Zoom: $newScale');
-          
+          double newScale = (_transformModel.imageScale * scaleDelta).clamp(
+            0.5,
+            3.0,
+          );
+          Log.d('Scroll - Zoom: $newScale');
+
           _transformModel.updateTransformations(
             position: _transformModel.imagePosition,
             scale: newScale,
@@ -151,23 +161,24 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
   void _onPanStart(DragStartDetails details) {
     _isMousePressed = true;
     _lastMousePosition = details.localPosition;
-    print('DEBUG: Pan start at: ${details.localPosition}');
+  Log.d('Pan start at: ${details.localPosition}');
   }
 
   void _onPanUpdate(DragUpdateDetails details) {
     if (!_isMousePressed || _lastMousePosition == null) return;
-    
+
     setState(() {
       bool isCtrlPressed = HardwareKeyboard.instance.isControlPressed;
       bool isShiftPressed = HardwareKeyboard.instance.isShiftPressed;
-      
+
       if (isCtrlPressed && isShiftPressed) {
         // Ctrl + Shift + Drag = Rotate around center
         Offset delta = details.localPosition - _lastMousePosition!;
-        double rotationDelta = delta.dx * 0.01; // Horizontal movement = rotation
+        double rotationDelta =
+            delta.dx * 0.01; // Horizontal movement = rotation
         double newRotation = _transformModel.imageRotation + rotationDelta;
-        print('DEBUG: Ctrl+Shift+Drag - Rotation: $newRotation');
-        
+  Log.d('Ctrl+Shift+Drag - Rotation: $newRotation');
+
         _transformModel.updateTransformations(
           position: _transformModel.imagePosition,
           scale: _transformModel.imageScale,
@@ -176,10 +187,14 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
       } else if (isCtrlPressed) {
         // Ctrl + Drag = Zoom based on vertical movement
         Offset delta = details.localPosition - _lastMousePosition!;
-        double scaleDelta = 1.0 + (delta.dy * -0.01); // Negative for intuitive direction
-        double newScale = (_transformModel.imageScale * scaleDelta).clamp(0.1, 5.0);
-        print('DEBUG: Ctrl+Drag - Scale: $newScale');
-        
+        double scaleDelta =
+            1.0 + (delta.dy * -0.01); // Negative for intuitive direction
+        double newScale = (_transformModel.imageScale * scaleDelta).clamp(
+          0.1,
+          5.0,
+        );
+  Log.d('Ctrl+Drag - Scale: $newScale');
+
         _transformModel.updateTransformations(
           position: _transformModel.imagePosition,
           scale: newScale,
@@ -189,15 +204,15 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
         // Normal Drag = Move
         Offset delta = details.localPosition - _lastMousePosition!;
         Offset newPosition = _transformModel.imagePosition + delta;
-        print('DEBUG: Drag - Move to: $newPosition');
-        
+  Log.d('Drag - Move to: $newPosition');
+
         _transformModel.updateTransformations(
           position: newPosition,
           scale: _transformModel.imageScale,
           rotation: _transformModel.imageRotation,
         );
       }
-      
+
       _lastMousePosition = details.localPosition;
     });
   }
@@ -205,7 +220,7 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
   void _onPanEnd(DragEndDetails details) {
     _isMousePressed = false;
     _lastMousePosition = null;
-    print('DEBUG: Pan end');
+  Log.d('Pan end');
   }
 
   /// Enhanced keyboard events with modifier keys
@@ -214,29 +229,37 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
       setState(() {
         bool isCtrlPressed = HardwareKeyboard.instance.isControlPressed;
         bool isShiftPressed = HardwareKeyboard.instance.isShiftPressed;
-        
+
         // Calculate step sizes based on modifiers
         double moveStep = isCtrlPressed ? 1.0 : (isShiftPressed ? 50.0 : 10.0);
         double scaleStep = isCtrlPressed ? 0.02 : (isShiftPressed ? 0.2 : 0.1);
-        double rotationStep = isCtrlPressed ? 0.02 : (isShiftPressed ? 0.5 : 0.1);
-        
+        double rotationStep = isCtrlPressed
+            ? 0.02
+            : (isShiftPressed ? 0.5 : 0.1);
+
         switch (event.logicalKey) {
           // Zoom controls
           case LogicalKeyboardKey.keyQ: // Scale down
             double scaleFactor = 1.0 - scaleStep;
-            double newScale = (_transformModel.imageScale * scaleFactor).clamp(0.1, 5.0);
-            print('DEBUG: Key Q (${isCtrlPressed ? 'precise' : isShiftPressed ? 'fast' : 'normal'}) - Scale: $newScale');
+            double newScale = (_transformModel.imageScale * scaleFactor).clamp(
+              0.1,
+              5.0,
+            );
+            Log.d('Key Q (${isCtrlPressed ? 'precise' : isShiftPressed ? 'fast' : 'normal'}) - Scale: $newScale');
             _transformModel.updateTransformations(
               position: _transformModel.imagePosition,
               scale: newScale,
               rotation: _transformModel.imageRotation,
             );
             break;
-            
+
           case LogicalKeyboardKey.keyE: // Scale up
             double scaleFactor = 1.0 + scaleStep;
-            double newScale = (_transformModel.imageScale * scaleFactor).clamp(0.1, 5.0);
-            print('DEBUG: Key E (${isCtrlPressed ? 'precise' : isShiftPressed ? 'fast' : 'normal'}) - Scale: $newScale');
+            double newScale = (_transformModel.imageScale * scaleFactor).clamp(
+              0.1,
+              5.0,
+            );
+            Log.d('Key E (${isCtrlPressed ? 'precise' : isShiftPressed ? 'fast' : 'normal'}) - Scale: $newScale');
             _transformModel.updateTransformations(
               position: _transformModel.imagePosition,
               scale: newScale,
@@ -246,30 +269,32 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
 
           // Movement controls - Arrow Keys
           case LogicalKeyboardKey.arrowUp:
-            Offset newPosition = _transformModel.imagePosition + Offset(0, -moveStep);
-            print('DEBUG: Arrow Up (${isCtrlPressed ? 'precise' : isShiftPressed ? 'fast' : 'normal'}) - Move: $newPosition');
+            Offset newPosition =
+                _transformModel.imagePosition + Offset(0, -moveStep);
+            Log.d('Arrow Up (${isCtrlPressed ? 'precise' : isShiftPressed ? 'fast' : 'normal'}) - Move: $newPosition');
             _transformModel.updateTransformations(
               position: newPosition,
               scale: _transformModel.imageScale,
               rotation: _transformModel.imageRotation,
             );
             break;
-            
+
           case LogicalKeyboardKey.arrowDown:
-            Offset newPosition = _transformModel.imagePosition + Offset(0, moveStep);
-            print('DEBUG: Arrow Down (${isCtrlPressed ? 'precise' : isShiftPressed ? 'fast' : 'normal'}) - Move: $newPosition');
+            Offset newPosition =
+                _transformModel.imagePosition + Offset(0, moveStep);
+            Log.d('Arrow Down (${isCtrlPressed ? 'precise' : isShiftPressed ? 'fast' : 'normal'}) - Move: $newPosition');
             _transformModel.updateTransformations(
               position: newPosition,
               scale: _transformModel.imageScale,
               rotation: _transformModel.imageRotation,
             );
             break;
-            
+
           case LogicalKeyboardKey.arrowLeft:
             if (isCtrlPressed || isShiftPressed) {
               // Ctrl/Shift + Left Arrow = Rotate left
               double newRotation = _transformModel.imageRotation - rotationStep;
-              print('DEBUG: Ctrl/Shift+Left - Rotate: $newRotation');
+              Log.d('Ctrl/Shift+Left - Rotate: $newRotation');
               _transformModel.updateTransformations(
                 position: _transformModel.imagePosition,
                 scale: _transformModel.imageScale,
@@ -277,8 +302,9 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
               );
             } else {
               // Normal Left Arrow = Move left
-              Offset newPosition = _transformModel.imagePosition + Offset(-moveStep, 0);
-              print('DEBUG: Arrow Left - Move: $newPosition');
+              Offset newPosition =
+                  _transformModel.imagePosition + Offset(-moveStep, 0);
+              Log.d('Arrow Left - Move: $newPosition');
               _transformModel.updateTransformations(
                 position: newPosition,
                 scale: _transformModel.imageScale,
@@ -286,12 +312,12 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
               );
             }
             break;
-            
+
           case LogicalKeyboardKey.arrowRight:
             if (isCtrlPressed || isShiftPressed) {
               // Ctrl/Shift + Right Arrow = Rotate right
               double newRotation = _transformModel.imageRotation + rotationStep;
-              print('DEBUG: Ctrl/Shift+Right - Rotate: $newRotation');
+              Log.d('Ctrl/Shift+Right - Rotate: $newRotation');
               _transformModel.updateTransformations(
                 position: _transformModel.imagePosition,
                 scale: _transformModel.imageScale,
@@ -299,8 +325,9 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
               );
             } else {
               // Normal Right Arrow = Move right
-              Offset newPosition = _transformModel.imagePosition + Offset(moveStep, 0);
-              print('DEBUG: Arrow Right - Move: $newPosition');
+              Offset newPosition =
+                  _transformModel.imagePosition + Offset(moveStep, 0);
+              Log.d('Arrow Right - Move: $newPosition');
               _transformModel.updateTransformations(
                 position: newPosition,
                 scale: _transformModel.imageScale,
@@ -311,38 +338,42 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
 
           // WASD controls
           case LogicalKeyboardKey.keyW:
-            Offset newPosition = _transformModel.imagePosition + Offset(0, -moveStep);
-            print('DEBUG: W (${isCtrlPressed ? 'precise' : isShiftPressed ? 'fast' : 'normal'}) - Move up: $newPosition');
+            Offset newPosition =
+                _transformModel.imagePosition + Offset(0, -moveStep);
+            Log.d('W (${isCtrlPressed ? 'precise' : isShiftPressed ? 'fast' : 'normal'}) - Move up: $newPosition');
             _transformModel.updateTransformations(
               position: newPosition,
               scale: _transformModel.imageScale,
               rotation: _transformModel.imageRotation,
             );
             break;
-            
+
           case LogicalKeyboardKey.keyS:
-            Offset newPosition = _transformModel.imagePosition + Offset(0, moveStep);
-            print('DEBUG: S (${isCtrlPressed ? 'precise' : isShiftPressed ? 'fast' : 'normal'}) - Move down: $newPosition');
+            Offset newPosition =
+                _transformModel.imagePosition + Offset(0, moveStep);
+            Log.d('S (${isCtrlPressed ? 'precise' : isShiftPressed ? 'fast' : 'normal'}) - Move down: $newPosition');
             _transformModel.updateTransformations(
               position: newPosition,
               scale: _transformModel.imageScale,
               rotation: _transformModel.imageRotation,
             );
             break;
-            
+
           case LogicalKeyboardKey.keyA:
-            Offset newPosition = _transformModel.imagePosition + Offset(-moveStep, 0);
-            print('DEBUG: A (${isCtrlPressed ? 'precise' : isShiftPressed ? 'fast' : 'normal'}) - Move left: $newPosition');
+            Offset newPosition =
+                _transformModel.imagePosition + Offset(-moveStep, 0);
+            Log.d('A (${isCtrlPressed ? 'precise' : isShiftPressed ? 'fast' : 'normal'}) - Move left: $newPosition');
             _transformModel.updateTransformations(
               position: newPosition,
               scale: _transformModel.imageScale,
               rotation: _transformModel.imageRotation,
             );
             break;
-            
+
           case LogicalKeyboardKey.keyD:
-            Offset newPosition = _transformModel.imagePosition + Offset(moveStep, 0);
-            print('DEBUG: D (${isCtrlPressed ? 'precise' : isShiftPressed ? 'fast' : 'normal'}) - Move right: $newPosition');
+            Offset newPosition =
+                _transformModel.imagePosition + Offset(moveStep, 0);
+            Log.d('D (${isCtrlPressed ? 'precise' : isShiftPressed ? 'fast' : 'normal'}) - Move right: $newPosition');
             _transformModel.updateTransformations(
               position: newPosition,
               scale: _transformModel.imageScale,
@@ -353,17 +384,17 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
           // Rotation controls
           case LogicalKeyboardKey.keyZ:
             double newRotation = _transformModel.imageRotation - rotationStep;
-            print('DEBUG: Z (${isCtrlPressed ? 'precise' : isShiftPressed ? 'fast' : 'normal'}) - Rotate left: $newRotation');
+            Log.d('Z (${isCtrlPressed ? 'precise' : isShiftPressed ? 'fast' : 'normal'}) - Rotate left: $newRotation');
             _transformModel.updateTransformations(
               position: _transformModel.imagePosition,
               scale: _transformModel.imageScale,
               rotation: newRotation,
             );
             break;
-            
+
           case LogicalKeyboardKey.keyX:
             double newRotation = _transformModel.imageRotation + rotationStep;
-            print('DEBUG: X (${isCtrlPressed ? 'precise' : isShiftPressed ? 'fast' : 'normal'}) - Rotate right: $newRotation');
+            Log.d('X (${isCtrlPressed ? 'precise' : isShiftPressed ? 'fast' : 'normal'}) - Rotate right: $newRotation');
             _transformModel.updateTransformations(
               position: _transformModel.imagePosition,
               scale: _transformModel.imageScale,
@@ -373,7 +404,7 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
 
           // Reset
           case LogicalKeyboardKey.keyR:
-            print('DEBUG: R - Reset transformations');
+            Log.d('R - Reset transformations');
             _transformModel.resetTransformations();
             break;
         }
@@ -386,18 +417,18 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
     setState(() {
       double newScale = _transformModel.previousScale * details.scale;
       double newRotation = _transformModel.previousRotation;
-      
+
       // Debug output
-      print('DEBUG: newScale = ${_transformModel.previousScale} * ${details.scale} = $newScale');
-      print('DEBUG: newRotation = $newRotation');
-      
+  Log.d('newScale = ${_transformModel.previousScale} * ${details.scale} = $newScale');
+  Log.d('newRotation = $newRotation');
+
       if (details.rotation != 0.0) {
         newRotation = _transformModel.previousRotation + details.rotation;
-        print('DEBUG: newRotation updated = ${_transformModel.previousRotation} + ${details.rotation} = $newRotation');
+        Log.d('newRotation updated = ${_transformModel.previousRotation} + ${details.rotation} = $newRotation');
       }
-      
-      Offset newPosition = details.focalPoint - _transformModel.previousPosition;
-      print('DEBUG: newPosition = ${details.focalPoint} - ${_transformModel.previousPosition} = $newPosition');
+
+  Offset newPosition = details.focalPoint - _transformModel.previousPosition;
+  Log.d('newPosition = ${details.focalPoint} - ${_transformModel.previousPosition} = $newPosition');
 
       _transformModel.updateTransformations(
         position: newPosition,
@@ -409,14 +440,16 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
 
   /// Crop and save the current image using both methods
   Future<void> _cropAndSaveImage() async {
-    if (!_transformModel.isImageLoaded || _transformModel.originalImage == null) {
+    if (!_transformModel.isImageLoaded ||
+        _transformModel.originalImage == null) {
       _showErrorMessage('Please select an image first.');
       return;
     }
 
     try {
       // Get the render box for calculating view size
-      final renderBox = _imageCropperKey.currentContext?.findRenderObject() as RenderBox?;
+      final renderBox =
+          _imageCropperKey.currentContext?.findRenderObject() as RenderBox?;
       if (renderBox == null) {
         _showErrorMessage('Could not get view dimensions.');
         return;
@@ -425,8 +458,8 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
       final viewSize = renderBox.size;
 
       // Call both crop methods
-      print('DEBUG: Starting both crop operations...');
-      
+  Log.d('Starting both crop operations...');
+
       // Method 1: Original crop method
       final savedFile1 = await ImageCropService.cropAndSaveImage(
         originalImage: _transformModel.originalImage!,
@@ -436,8 +469,8 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
         viewSize: viewSize,
         cropSquareSize: cropSquareSize,
       );
-      
-      print('DEBUG: Original crop method completed');
+
+  Log.d('Original crop method completed');
 
       // Method 2: Screen crop method (1:1 representation)
       final savedFile2 = await ImageCropService.cropAndSaveImageFromScreen(
@@ -449,24 +482,24 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
         cropSquareSize: cropSquareSize,
         targetSize: 300.0, // Fixed 350x350 output
       );
-      
-      print('DEBUG: Screen crop method completed');
+
+  Log.d('Screen crop method completed');
 
       _showSuccessMessage(
         'Images saved:\n'
-        '1. Standard crop: ${savedFile1.path.split('/').last}\n'
-        '2. Screen crop (350x350): ${savedFile2.path.split('/').last}'
+        '1. Standard crop: ${kIsWeb ? "web_image.png" : savedFile1.path.split('/').last}\n'
+        '2. Screen crop (300x300): ${kIsWeb ? "web_image_screen.png" : savedFile2.path.split('/').last}',
       );
-      
     } catch (e) {
       _showErrorMessage('Failed to crop and save image: $e');
-      print('ERROR: Crop operation failed: $e');
+  Log.e('Crop operation failed: $e');
     }
   }
 
   /// Test function to save image in four parts
   Future<void> _testSaveImageInFourParts() async {
-    if (!_transformModel.isImageLoaded || _transformModel.originalImage == null) {
+    if (!_transformModel.isImageLoaded ||
+        _transformModel.originalImage == null) {
       _showErrorMessage('Please select an image first.');
       return;
     }
@@ -478,7 +511,9 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
         'test_image_parts',
       );
 
-      _showSuccessMessage('Image saved in ${savedFiles.length} parts successfully!');
+      _showSuccessMessage(
+        'Image saved in ${savedFiles.length} parts successfully!',
+      );
     } catch (e) {
       _showErrorMessage('Failed to save image in four parts: $e');
     }
@@ -487,20 +522,14 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
   /// Show error message
   void _showErrorMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
     );
   }
 
   /// Show success message
   void _showSuccessMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.green,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.green),
     );
   }
 
@@ -508,7 +537,16 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Image Cropper'),
+        title: Row(
+          children: [
+            const Text('Image Cropper'),
+            const SizedBox(width: 16),
+            Text(
+              'kIsWeb: ${kIsWeb ? "true" : "false"}',
+              style: const TextStyle(fontSize: 14),
+            ),
+          ],
+        ),
         backgroundColor: Colors.blueAccent,
         centerTitle: true,
       ),
@@ -533,7 +571,7 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
                         onScaleStart: _onScaleStart,
                         onScaleUpdate: _onScaleUpdate,
                       ),
-                      
+
                       // Crop overlay
                       IgnorePointer(
                         child: CustomPaint(
@@ -543,7 +581,7 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
                           ),
                         ),
                       ),
-                      
+
                       // Enhanced help overlay
                       Positioned(
                         top: 10,
@@ -573,7 +611,7 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
                             '  • Z/X = Rotate\n'
                             '  • R = Reset',
                             style: TextStyle(
-                              color: Colors.white, 
+                              color: Colors.white,
                               fontSize: 10,
                               height: 1.2,
                             ),
@@ -586,7 +624,7 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
               ),
             ),
           ),
-          
+
           // Action buttons
           Padding(
             padding: const EdgeInsets.all(16.0),

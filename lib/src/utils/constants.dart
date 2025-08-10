@@ -1,5 +1,7 @@
 /// App-wide constants
 class AppConstants {
+  // Configuration: Enable/disable local image saving
+  static const bool saveImagesLocally = false;
   // Image cropping
   static const double cropSquareSize = 200.0;
   static const double overlayOpacity = 0.75;

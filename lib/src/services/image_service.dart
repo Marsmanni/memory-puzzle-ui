@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:ui' as ui;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -56,13 +57,14 @@ class ImageService {
 
   /// Save image as four parts
   static Future<List<File>> saveImageAsFourParts(ui.Image image, String filenamePrefix) async {
-    try {
+  try {
       // Calculate the dimensions for each of the four parts
       final int halfWidth = image.width ~/ 2;
       final int halfHeight = image.height ~/ 2;
 
-      final List<File> savedFiles = [];
-
+  final List<File> savedFiles = [];
+  // Optionally skip saving files locally
+  
       // Define the source rectangles for each quadrant of the original image
       final List<Rect> sourceRects = [
         Rect.fromLTWH(0, 0, halfWidth.toDouble(), halfHeight.toDouble()), // Top-left
@@ -76,7 +78,7 @@ class ImageService {
       
       final directory = await getTemporaryDirectory();
 
-      for (int i = 0; i < sourceRects.length; i++) {
+  for (int i = 0; i < sourceRects.length; i++) {
         // Create a new PictureRecorder and Canvas for each part
         final recorder = ui.PictureRecorder();
         final canvas = Canvas(recorder, destRect);
@@ -94,14 +96,16 @@ class ImageService {
           throw Exception('Could not convert image part $i to byte data.');
         }
 
-        // Create a filename for the part and save it
-        final filename = '${filenamePrefix}_part${i + 1}.png';
-        final file = File('${directory.path}/$filename');
-        await file.writeAsBytes(byteData.buffer.asUint8List());
-        savedFiles.add(file);
+        if (!kIsWeb) {
+          // Create a filename for the part and save it
+          final filename = '${filenamePrefix}_part${i + 1}.png';
+          final file = File('${directory.path}/$filename');
+          await file.writeAsBytes(byteData.buffer.asUint8List());
+          savedFiles.add(file);
+        }
       }
       
-      return savedFiles;
+  return savedFiles;
     } catch (e) {
       throw Exception('Error saving image parts: $e');
     }
