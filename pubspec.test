@@ -1,0 +1,11 @@
+name: path_provider_test
+description: A minimal app to test path_provider.
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  path_provider: ^2.1.1 # The path_provider package is required for getApplicationDocumentsDirectory().
