@@ -524,41 +524,45 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
 
       final viewSize = renderBox.size;
 
-      // Call both crop methods
-      Log.d('Starting both crop operations...');
-
-      // Method 1: Original crop method
-      final savedFile1 = await ImageCropService.cropAndSaveImage(
+      // Crop image to PNG bytes
+      final pngData = await ImageCropService.cropImage(
         originalImage: _transformModel.originalImage!,
         imagePosition: _transformModel.imagePosition,
         imageScale: _transformModel.imageScale,
         imageRotation: _transformModel.imageRotation,
         viewSize: viewSize,
         cropSquareSize: cropSquareSize,
+        targetSize: 300.0,
       );
 
-      Log.d('Original crop method completed');
-
-      // Method 2: Screen crop method (1:1 representation)
-      final savedFile2 = await ImageCropService.cropAndSaveImageFromScreen(
-        originalImage: _transformModel.originalImage!,
-        imagePosition: _transformModel.imagePosition,
-        imageScale: _transformModel.imageScale,
-        imageRotation: _transformModel.imageRotation,
-        viewSize: viewSize,
-        cropSquareSize: cropSquareSize,
-        targetSize: 300.0, // Fixed 350x350 output
+      // Save image (non-web platforms)
+      final String timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+      final String filename = 'cropped_${timestamp}_300x300.png';
+      final savedFile = await ImageCropService.saveImage(
+        filename: filename,
+        pngData: pngData,
       );
 
-      Log.d('Screen crop method completed');
+      // Upload image
+      final uploadResult = await ImageCropService.uploadImageBytesToEndpoint(
+        filegroup: 'test123',
+        imageBytes: pngData
+      );
 
+      Log.d('Crop, save, and upload completed');
+
+      String savedMsg = '';
+      // Only show 'Saved' for Windows app
+      if (!kIsWeb) {
+        savedMsg = 'Saved: ${savedFile?.path ?? ""}\n';
+      }
       _showSuccessMessage(
-        'Images saved:\n'
-        '1. Standard crop: ${kIsWeb ? "web_image.png" : savedFile1.path.split('/').last}\n'
-        '2. Screen crop (300x300): ${kIsWeb ? "web_image_screen.png" : savedFile2.path.split('/').last}',
+        'Image processed:\n'
+        '$savedMsg'
+        'Upload: ${uploadResult['success'] == true ? "Success" : "Failed"}',
       );
     } catch (e) {
-      _showErrorMessage('Failed to crop and save image: $e');
+      _showErrorMessage('Failed to crop, save, or upload image: $e');
       Log.e('Crop operation failed: $e');
     }
   }
