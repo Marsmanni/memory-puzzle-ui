@@ -161,7 +161,7 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
   void _onPanStart(DragStartDetails details) {
     _isMousePressed = true;
     _lastMousePosition = details.localPosition;
-  Log.d('Pan start at: ${details.localPosition}');
+    Log.d('Pan start at: ${details.localPosition}');
   }
 
   void _onPanUpdate(DragUpdateDetails details) {
@@ -177,7 +177,7 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
         double rotationDelta =
             delta.dx * 0.01; // Horizontal movement = rotation
         double newRotation = _transformModel.imageRotation + rotationDelta;
-  Log.d('Ctrl+Shift+Drag - Rotation: $newRotation');
+        Log.d('Ctrl+Shift+Drag - Rotation: $newRotation');
 
         _transformModel.updateTransformations(
           position: _transformModel.imagePosition,
@@ -193,7 +193,7 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
           0.1,
           5.0,
         );
-  Log.d('Ctrl+Drag - Scale: $newScale');
+        Log.d('Ctrl+Drag - Scale: $newScale');
 
         _transformModel.updateTransformations(
           position: _transformModel.imagePosition,
@@ -204,7 +204,7 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
         // Normal Drag = Move
         Offset delta = details.localPosition - _lastMousePosition!;
         Offset newPosition = _transformModel.imagePosition + delta;
-  Log.d('Drag - Move to: $newPosition');
+        Log.d('Drag - Move to: $newPosition');
 
         _transformModel.updateTransformations(
           position: newPosition,
@@ -220,7 +220,7 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
   void _onPanEnd(DragEndDetails details) {
     _isMousePressed = false;
     _lastMousePosition = null;
-  Log.d('Pan end');
+    Log.d('Pan end');
   }
 
   /// Enhanced keyboard events with modifier keys
@@ -245,7 +245,13 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
               0.1,
               5.0,
             );
-            Log.d('Key Q (${isCtrlPressed ? 'precise' : isShiftPressed ? 'fast' : 'normal'}) - Scale: $newScale');
+            Log.d(
+              'Key Q (${isCtrlPressed
+                  ? 'precise'
+                  : isShiftPressed
+                  ? 'fast'
+                  : 'normal'}) - Scale: $newScale',
+            );
             _transformModel.updateTransformations(
               position: _transformModel.imagePosition,
               scale: newScale,
@@ -259,7 +265,13 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
               0.1,
               5.0,
             );
-            Log.d('Key E (${isCtrlPressed ? 'precise' : isShiftPressed ? 'fast' : 'normal'}) - Scale: $newScale');
+            Log.d(
+              'Key E (${isCtrlPressed
+                  ? 'precise'
+                  : isShiftPressed
+                  ? 'fast'
+                  : 'normal'}) - Scale: $newScale',
+            );
             _transformModel.updateTransformations(
               position: _transformModel.imagePosition,
               scale: newScale,
@@ -271,7 +283,13 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
           case LogicalKeyboardKey.arrowUp:
             Offset newPosition =
                 _transformModel.imagePosition + Offset(0, -moveStep);
-            Log.d('Arrow Up (${isCtrlPressed ? 'precise' : isShiftPressed ? 'fast' : 'normal'}) - Move: $newPosition');
+            Log.d(
+              'Arrow Up (${isCtrlPressed
+                  ? 'precise'
+                  : isShiftPressed
+                  ? 'fast'
+                  : 'normal'}) - Move: $newPosition',
+            );
             _transformModel.updateTransformations(
               position: newPosition,
               scale: _transformModel.imageScale,
@@ -282,7 +300,13 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
           case LogicalKeyboardKey.arrowDown:
             Offset newPosition =
                 _transformModel.imagePosition + Offset(0, moveStep);
-            Log.d('Arrow Down (${isCtrlPressed ? 'precise' : isShiftPressed ? 'fast' : 'normal'}) - Move: $newPosition');
+            Log.d(
+              'Arrow Down (${isCtrlPressed
+                  ? 'precise'
+                  : isShiftPressed
+                  ? 'fast'
+                  : 'normal'}) - Move: $newPosition',
+            );
             _transformModel.updateTransformations(
               position: newPosition,
               scale: _transformModel.imageScale,
@@ -340,7 +364,13 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
           case LogicalKeyboardKey.keyW:
             Offset newPosition =
                 _transformModel.imagePosition + Offset(0, -moveStep);
-            Log.d('W (${isCtrlPressed ? 'precise' : isShiftPressed ? 'fast' : 'normal'}) - Move up: $newPosition');
+            Log.d(
+              'W (${isCtrlPressed
+                  ? 'precise'
+                  : isShiftPressed
+                  ? 'fast'
+                  : 'normal'}) - Move up: $newPosition',
+            );
             _transformModel.updateTransformations(
               position: newPosition,
               scale: _transformModel.imageScale,
@@ -351,7 +381,13 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
           case LogicalKeyboardKey.keyS:
             Offset newPosition =
                 _transformModel.imagePosition + Offset(0, moveStep);
-            Log.d('S (${isCtrlPressed ? 'precise' : isShiftPressed ? 'fast' : 'normal'}) - Move down: $newPosition');
+            Log.d(
+              'S (${isCtrlPressed
+                  ? 'precise'
+                  : isShiftPressed
+                  ? 'fast'
+                  : 'normal'}) - Move down: $newPosition',
+            );
             _transformModel.updateTransformations(
               position: newPosition,
               scale: _transformModel.imageScale,
@@ -362,7 +398,13 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
           case LogicalKeyboardKey.keyA:
             Offset newPosition =
                 _transformModel.imagePosition + Offset(-moveStep, 0);
-            Log.d('A (${isCtrlPressed ? 'precise' : isShiftPressed ? 'fast' : 'normal'}) - Move left: $newPosition');
+            Log.d(
+              'A (${isCtrlPressed
+                  ? 'precise'
+                  : isShiftPressed
+                  ? 'fast'
+                  : 'normal'}) - Move left: $newPosition',
+            );
             _transformModel.updateTransformations(
               position: newPosition,
               scale: _transformModel.imageScale,
@@ -373,7 +415,13 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
           case LogicalKeyboardKey.keyD:
             Offset newPosition =
                 _transformModel.imagePosition + Offset(moveStep, 0);
-            Log.d('D (${isCtrlPressed ? 'precise' : isShiftPressed ? 'fast' : 'normal'}) - Move right: $newPosition');
+            Log.d(
+              'D (${isCtrlPressed
+                  ? 'precise'
+                  : isShiftPressed
+                  ? 'fast'
+                  : 'normal'}) - Move right: $newPosition',
+            );
             _transformModel.updateTransformations(
               position: newPosition,
               scale: _transformModel.imageScale,
@@ -384,7 +432,13 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
           // Rotation controls
           case LogicalKeyboardKey.keyZ:
             double newRotation = _transformModel.imageRotation - rotationStep;
-            Log.d('Z (${isCtrlPressed ? 'precise' : isShiftPressed ? 'fast' : 'normal'}) - Rotate left: $newRotation');
+            Log.d(
+              'Z (${isCtrlPressed
+                  ? 'precise'
+                  : isShiftPressed
+                  ? 'fast'
+                  : 'normal'}) - Rotate left: $newRotation',
+            );
             _transformModel.updateTransformations(
               position: _transformModel.imagePosition,
               scale: _transformModel.imageScale,
@@ -394,7 +448,13 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
 
           case LogicalKeyboardKey.keyX:
             double newRotation = _transformModel.imageRotation + rotationStep;
-            Log.d('X (${isCtrlPressed ? 'precise' : isShiftPressed ? 'fast' : 'normal'}) - Rotate right: $newRotation');
+            Log.d(
+              'X (${isCtrlPressed
+                  ? 'precise'
+                  : isShiftPressed
+                  ? 'fast'
+                  : 'normal'}) - Rotate right: $newRotation',
+            );
             _transformModel.updateTransformations(
               position: _transformModel.imagePosition,
               scale: _transformModel.imageScale,
@@ -419,16 +479,23 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
       double newRotation = _transformModel.previousRotation;
 
       // Debug output
-  Log.d('newScale = ${_transformModel.previousScale} * ${details.scale} = $newScale');
-  Log.d('newRotation = $newRotation');
+      Log.d(
+        'newScale = ${_transformModel.previousScale} * ${details.scale} = $newScale',
+      );
+      Log.d('newRotation = $newRotation');
 
       if (details.rotation != 0.0) {
         newRotation = _transformModel.previousRotation + details.rotation;
-        Log.d('newRotation updated = ${_transformModel.previousRotation} + ${details.rotation} = $newRotation');
+        Log.d(
+          'newRotation updated = ${_transformModel.previousRotation} + ${details.rotation} = $newRotation',
+        );
       }
 
-  Offset newPosition = details.focalPoint - _transformModel.previousPosition;
-  Log.d('newPosition = ${details.focalPoint} - ${_transformModel.previousPosition} = $newPosition');
+      Offset newPosition =
+          details.focalPoint - _transformModel.previousPosition;
+      Log.d(
+        'newPosition = ${details.focalPoint} - ${_transformModel.previousPosition} = $newPosition',
+      );
 
       _transformModel.updateTransformations(
         position: newPosition,
@@ -458,7 +525,7 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
       final viewSize = renderBox.size;
 
       // Call both crop methods
-  Log.d('Starting both crop operations...');
+      Log.d('Starting both crop operations...');
 
       // Method 1: Original crop method
       final savedFile1 = await ImageCropService.cropAndSaveImage(
@@ -470,7 +537,7 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
         cropSquareSize: cropSquareSize,
       );
 
-  Log.d('Original crop method completed');
+      Log.d('Original crop method completed');
 
       // Method 2: Screen crop method (1:1 representation)
       final savedFile2 = await ImageCropService.cropAndSaveImageFromScreen(
@@ -483,7 +550,7 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
         targetSize: 300.0, // Fixed 350x350 output
       );
 
-  Log.d('Screen crop method completed');
+      Log.d('Screen crop method completed');
 
       _showSuccessMessage(
         'Images saved:\n'
@@ -492,7 +559,7 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
       );
     } catch (e) {
       _showErrorMessage('Failed to crop and save image: $e');
-  Log.e('Crop operation failed: $e');
+      Log.e('Crop operation failed: $e');
     }
   }
 

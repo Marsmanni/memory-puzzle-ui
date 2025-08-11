@@ -251,7 +251,7 @@ class ImageCropService {
       if (newImageFile != null) {
         Log.d('Image saved to: $filename');
         // Print file size for both platforms
-        if (newImageFile is WebImageFile) {
+        if (kIsWeb) {
           Log.d('File size: ${newImageFile.length} bytes');
         } else if (newImageFile.length is int) {
           Log.d('File size: ${await newImageFile.length()} bytes');
@@ -422,7 +422,7 @@ class ImageCropService {
       if (newImageFile != null) {
         Log.d('Screen cropped image saved to: $filename');
         // Print file size for both platforms
-        if (newImageFile is WebImageFile) {
+        if (kIsWeb) {
           Log.d('File size (WebImageFile): ${newImageFile.length} bytes');
         } else if (newImageFile.length is int) {
           Log.d('File size: (real file) ${await newImageFile.length()} bytes');
