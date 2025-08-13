@@ -30,6 +30,8 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
   // The size of the square cropping area
   static const double cropSquareSize = AppConstants.cropSquareSize;
 
+  Uint8List? _croppedImageBytes;
+
   @override
   void initState() {
     super.initState();
@@ -69,16 +71,23 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
       if (imageFile != null) {
         final image = await ImageService.xFileToUiImage(imageFile);
 
+        // Calculate initial scale and position
+        final double cropSize = cropSquareSize;
+        final double scaleX = cropSize / image.width;
+        final double scaleY = cropSize / image.height;
+        final double initialScale = 1; // scaleX < scaleY ? scaleX : scaleY;
+
         setState(() {
           _transformModel = _transformModel.copyWith(
             imageFile: imageFile,
             originalImage: image,
             isImageLoaded: true,
             imagePosition: Offset.zero,
-            imageScale: 1.0,
+            imageScale: 1.0, // Temporary, will be updated
             imageRotation: 0.0,
           );
         });
+        _setInitialScaleAfterLayout();
       }
     } catch (e) {
       _showErrorMessage('Failed to pick image: $e');
@@ -535,6 +544,10 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
         targetSize: 300.0,
       );
 
+      setState(() {
+        _croppedImageBytes = pngData;
+      });
+
       // Save image (non-web platforms)
       final String timestamp = DateTime.now().millisecondsSinceEpoch.toString();
       final String filename = 'cropped_${timestamp}_300x300.png';
@@ -546,7 +559,7 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
       // Upload image
       final uploadResult = await ImageCropService.uploadImageBytesToEndpoint(
         filegroup: 'test123',
-        imageBytes: pngData
+        imageBytes: pngData,
       );
 
       Log.d('Crop, save, and upload completed');
@@ -604,6 +617,25 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
     );
   }
 
+  void _setInitialScaleAfterLayout() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final renderBox = _imageCropperKey.currentContext?.findRenderObject() as RenderBox?;
+      if (renderBox != null && _transformModel.originalImage != null) {
+        final viewSize = renderBox.size;
+        final image = _transformModel.originalImage!;
+        final double scaleX = viewSize.width / image.width;
+        final double scaleY = viewSize.height / image.height;
+        final double initialScale = scaleX < scaleY ? scaleX : scaleY;
+        setState(() {
+          _transformModel = _transformModel.copyWith(
+            imageScale: initialScale,
+            imagePosition: Offset.zero,
+          );
+        });
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -653,42 +685,89 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
                         ),
                       ),
 
-                      // Enhanced help overlay
+                      // Help overlay
                       Positioned(
                         top: 10,
                         left: 10,
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.black87,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Text(
-                            'ENHANCED CONTROLS:\n'
-                            '🖱️ Mouse:\n'
-                            '  • Scroll = Zoom\n'
-                            '  • Shift+Scroll = Rotate\n'
-                            '  • Ctrl+Scroll = Precise Zoom\n'
-                            '  • Ctrl+Shift+Scroll = Precise Rotate\n'
-                            '  • Drag = Move\n'
-                            '  • Ctrl+Drag = Zoom\n'
-                            '  • Ctrl+Shift+Drag = Rotate\n'
-                            '⌨️ Keyboard:\n'
-                            '  • Arrow/WASD = Move\n'
-                            '  • Ctrl+Arrow/WASD = Precise Move\n'
-                            '  • Shift+Arrow/WASD = Fast Move\n'
-                            '  • Ctrl+Left/Right = Precise Rotate\n'
-                            '  • Q/E = Zoom\n'
-                            '  • Z/X = Rotate\n'
-                            '  • R = Reset',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              height: 1.2,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.black87,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Text(
+                                'ENHANCED CONTROLS:\n'
+                                '🖱️ Mouse:\n'
+                                '  • Scroll = Zoom\n'
+                                '  • Shift+Scroll = Rotate\n'
+                                '  • Ctrl+Scroll = Precise Zoom\n'
+                                '  • Ctrl+Shift+Scroll = Precise Rotate\n'
+                                '  • Drag = Move\n'
+                                '  • Ctrl+Drag = Zoom\n'
+                                '  • Ctrl+Shift+Drag = Rotate\n'
+                                '⌨️ Keyboard:\n'
+                                '  • Arrow/WASD = Move\n'
+                                '  • Ctrl+Arrow/WASD = Precise Move\n'
+                                '  • Shift+Arrow/WASD = Fast Move\n'
+                                '  • Ctrl+Left/Right = Precise Rotate\n'
+                                '  • Q/E = Zoom\n'
+                                '  • Z/X = Rotate\n'
+                                '  • R = Reset',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  height: 1.2,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.white70,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Current scale: ${_transformModel.imageScale.toStringAsFixed(2)}',
+                                    style: const TextStyle(
+                                        fontSize: 12, color: Colors.black),
+                                  ),
+                                  Text(
+                                    'Current offset: (${_transformModel.imagePosition.dx.toStringAsFixed(1)}, ${_transformModel.imagePosition.dy.toStringAsFixed(1)})',
+                                    style: const TextStyle(
+                                        fontSize: 12, color: Colors.black),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Show cropped image below help panel
+                      if (_croppedImageBytes != null)
+                        Positioned(
+                          top: 350, // Adjust as needed to appear below the help panel
+                          left: 10,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.black, width: 2),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                            child: Image.memory(
+                              _croppedImageBytes!,
+                              width: 200, // Adjust size as needed
+                              height: 200,
+                              fit: BoxFit.cover,
                             ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                 ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../utils/constants.dart';
 
 class LoginDialog extends StatefulWidget {
   final void Function(String jwt, String role)? onLoginSuccess;
@@ -22,7 +23,7 @@ class _LoginDialogState extends State<LoginDialog> {
       _loading = true;
       _error = null;
     });
-    final url = Uri.parse('https://memorypuzzleapi.azurewebsites.net/api/users/login');
+    final url = Uri.parse(AppConstants.loginEndpoint);
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},

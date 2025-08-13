@@ -11,6 +11,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 // import 'package:path_provider/path_provider.dart';
 import '../utils/log.dart';
+import '../utils/constants.dart';
 
 /// Service class for handling image cropping operations
 class ImageCropService {
@@ -20,9 +21,7 @@ class ImageCropService {
   required Uint8List imageBytes,
   }) async {
     try {
-      final uri = Uri.parse(
-        'https://memorypuzzleapi.azurewebsites.net/api/images/upload',
-      );
+      final uri = Uri.parse(AppConstants.imageUploadEndpoint);
       final request = http.MultipartRequest('POST', uri);
       request.files.add(
         http.MultipartFile.fromBytes(
