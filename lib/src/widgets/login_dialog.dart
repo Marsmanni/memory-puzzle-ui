@@ -4,8 +4,19 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/constants.dart';
 
+// Helper to decode JWT and extract claims
+Map<String, dynamic> parseJwt(String token) {
+  final parts = token.split('.');
+  if (parts.length != 3) {
+    throw Exception('Invalid JWT');
+  }
+  final payload = base64Url.normalize(parts[1]);
+  final decoded = utf8.decode(base64Url.decode(payload));
+  return jsonDecode(decoded);
+}
+
 class LoginDialog extends StatefulWidget {
-  final void Function(String jwt, String role)? onLoginSuccess;
+  final void Function(String jwt, String role, String user)? onLoginSuccess;
   const LoginDialog({Key? key, this.onLoginSuccess}) : super(key: key);
 
   @override
@@ -35,11 +46,17 @@ class _LoginDialogState extends State<LoginDialog> {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       final jwt = data['token'] ?? data['jwt'] ?? '';
-      final role = data['role'] ?? 'user';
+      final claims = parseJwt(jwt);
+      // After parsing claims
+      debugPrint('JWT claims: $claims'); // Add this for debugging
+
+      final role = claims['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ?? data['role'] ?? 'user';
+      final user = claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] ?? data['user'] ?? _usernameController.text;
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('jwt', jwt);
       await prefs.setString('role', role);
-      if (widget.onLoginSuccess != null) widget.onLoginSuccess!(jwt, role);
+      await prefs.setString('user', user);
+      if (widget.onLoginSuccess != null) widget.onLoginSuccess!(jwt, role, user);
       Navigator.of(context).pop();
     } else {
       setState(() {

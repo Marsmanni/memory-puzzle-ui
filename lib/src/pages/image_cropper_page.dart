@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/foundation.dart';
+import 'package:file_picker/file_picker.dart';
+import 'dart:async';
+import 'dart:ui' as ui;
 import '../models/image_transform_model.dart';
 import '../services/image_service.dart';
 import '../services/image_crop_service.dart';
@@ -54,6 +57,7 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
       );
 
       setState(() {
+        Log.d('SetState1');
         _transformModel = _transformModel.copyWith(
           originalImage: image,
           isImageLoaded: true,
@@ -72,12 +76,14 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
         final image = await ImageService.xFileToUiImage(imageFile);
 
         // Calculate initial scale and position
-        final double cropSize = cropSquareSize;
-        final double scaleX = cropSize / image.width;
-        final double scaleY = cropSize / image.height;
-        final double initialScale = 1; // scaleX < scaleY ? scaleX : scaleY;
+        //final double cropSize = cropSquareSize;
+        //final double scaleX = cropSize / image.width;
+        //final double scaleY = cropSize / image.height;
+        //final double initialScale = 1; // scaleX < scaleY ? scaleX : scaleY;
 
         setState(() {
+          Log.d('SetState2');
+
           _transformModel = _transformModel.copyWith(
             imageFile: imageFile,
             originalImage: image,
@@ -94,6 +100,40 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
     }
   }
 
+// Helper function to convert Uint8List to ui.Image
+Future<ui.Image> uint8ListToUiImage(Uint8List bytes) async {
+  final completer = Completer<ui.Image>();
+  ui.decodeImageFromList(bytes, (ui.Image img) {
+    completer.complete(img);
+  });
+  return completer.future;
+}
+  Future<void> pickImageWeb() async {
+  try {
+    final result = await FilePicker.platform.pickFiles(type: FileType.image);
+    if (result != null && result.files.isNotEmpty) {
+      final bytes = result.files.first.bytes;
+      if (bytes != null) {
+
+        final image = await uint8ListToUiImage(bytes);
+
+        setState(() {
+          Log.d('SetState2 (Web)');
+          _transformModel = _transformModel.copyWith(
+            originalImage: image,
+            isImageLoaded: true,
+            imagePosition: Offset.zero,
+            imageScale: 1.0, // Temporary, will be updated
+            imageRotation: 0.0,
+          );
+        });
+        _setInitialScaleAfterLayout();
+      }
+    }
+  } catch (e) {
+    _showErrorMessage('Failed to pick image (web): $e');
+  }
+}
   /// Handle scale start gesture
   void _onScaleStart(ScaleStartDetails details) {
     _transformModel.updateGestureState(
@@ -484,6 +524,8 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
   /// Handle scale update gesture
   void _onScaleUpdate(ScaleUpdateDetails details) {
     setState(() {
+      Log.d('SetState3');
+
       double newScale = _transformModel.previousScale * details.scale;
       double newRotation = _transformModel.previousRotation;
 
@@ -558,7 +600,7 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
 
       // Upload image
       final uploadResult = await ImageCropService.uploadImageBytesToEndpoint(
-        filegroup: 'test123',
+        filegroup: '1',
         imageBytes: pngData,
       );
 
@@ -619,18 +661,22 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
 
   void _setInitialScaleAfterLayout() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final renderBox = _imageCropperKey.currentContext?.findRenderObject() as RenderBox?;
+      final renderBox =
+          _imageCropperKey.currentContext?.findRenderObject() as RenderBox?;
       if (renderBox != null && _transformModel.originalImage != null) {
         final viewSize = renderBox.size;
         final image = _transformModel.originalImage!;
         final double scaleX = viewSize.width / image.width;
         final double scaleY = viewSize.height / image.height;
+        //final double scaleX = cropSquareSize / image.width;
+        //final double scaleY = cropSquareSize / image.height;
         final double initialScale = scaleX < scaleY ? scaleX : scaleY;
         setState(() {
           _transformModel = _transformModel.copyWith(
             imageScale: initialScale,
             imagePosition: Offset.zero,
           );
+          Log.d('Initial scale set: $initialScale');
         });
       }
     });
@@ -685,7 +731,7 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
                         ),
                       ),
 
-                      // Help overlay
+                      // Help overlay and info panel
                       Positioned(
                         top: 10,
                         left: 10,
@@ -736,13 +782,25 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
                                   Text(
                                     'Current scale: ${_transformModel.imageScale.toStringAsFixed(2)}',
                                     style: const TextStyle(
-                                        fontSize: 12, color: Colors.black),
+                                      fontSize: 12,
+                                      color: Colors.black,
+                                    ),
                                   ),
                                   Text(
                                     'Current offset: (${_transformModel.imagePosition.dx.toStringAsFixed(1)}, ${_transformModel.imagePosition.dy.toStringAsFixed(1)})',
                                     style: const TextStyle(
-                                        fontSize: 12, color: Colors.black),
+                                      fontSize: 12,
+                                      color: Colors.black,
+                                    ),
                                   ),
+                                  if (_transformModel.originalImage != null)
+                                    Text(
+                                      'Image size: ${_transformModel.originalImage!.width} x ${_transformModel.originalImage!.height}',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.black,
+                                      ),
+                                    ),
                                 ],
                               ),
                             ),
@@ -753,7 +811,8 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
                       // Show cropped image below help panel
                       if (_croppedImageBytes != null)
                         Positioned(
-                          top: 350, // Adjust as needed to appear below the help panel
+                          top:
+                              350, // Adjust as needed to appear below the help panel
                           left: 10,
                           child: Container(
                             decoration: BoxDecoration(
@@ -786,6 +845,10 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
                     ElevatedButton(
                       onPressed: _pickImage,
                       child: const Text('Select Photo'),
+                    ),
+                    ElevatedButton(
+                      onPressed: pickImageWeb,
+                      child: const Text('Select Photo Web'),
                     ),
                     ElevatedButton(
                       onPressed: _cropAndSaveImage,

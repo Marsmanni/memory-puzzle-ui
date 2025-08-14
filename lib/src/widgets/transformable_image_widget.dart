@@ -34,7 +34,7 @@ class TransformableImageWidget extends StatelessWidget {
               angle: transformModel.imageRotation,
               child: RawImage(
                 image: transformModel.originalImage,
-                fit: BoxFit.contain,
+                fit: BoxFit.none,
               ),
             ),
           ),

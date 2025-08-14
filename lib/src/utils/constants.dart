@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 /// App-wide constants
 class AppConstants {
   // Configuration: Enable/disable local image saving
@@ -17,11 +19,13 @@ class AppConstants {
 
   // App metadata
   static const String appTitle = 'Image Cropper App';
-//https://localhost:7260/
-  static const String apiBaseUrl = 'http://localhost:5218/api/';
-  //static const String apiBaseUrl = 'https://memorypuzzleapi.azurewebsites.net/api/';
+  // Use localhost for debug, Azure for release
+  static const String apiBaseUrl = kReleaseMode
+      ? 'https://memorypuzzleapi.azurewebsites.net/api/'
+      : 'http://localhost:5218/api/';
   static const String loginEndpoint = '${apiBaseUrl}users/login';
   static const String registerEndpoint = '${apiBaseUrl}users/register';
   static const String userProfileEndpoint = '${apiBaseUrl}users/profile';
   static const String imageUploadEndpoint = '${apiBaseUrl}images/upload';
+  static const String imageTestgroupEndpoint = '${apiBaseUrl}images/group/testgroup';
   }
