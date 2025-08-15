@@ -52,7 +52,7 @@ class _MyAppState extends State<MyApp> {
       });
     } catch (e) {
       setState(() {
-        _deploymentText = '';
+        _deploymentText = 'local debug';
       });
     }
   }
