@@ -28,4 +28,5 @@ class AppConstants {
   static const String userProfileEndpoint = '${apiBaseUrl}users/profile';
   static const String imageUploadEndpoint = '${apiBaseUrl}images/upload';
   static const String imageTestgroupEndpoint = '${apiBaseUrl}images/group/testgroup';
+  static const String puzzleCreateEndpoint = '${apiBaseUrl}puzzles';
   }

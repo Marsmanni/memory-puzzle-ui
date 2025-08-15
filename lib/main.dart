@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'src/pages/image_cropper_page.dart';
 import 'src/pages/play_page.dart';
 import 'src/pages/create_page.dart';
@@ -25,11 +26,13 @@ class _MyAppState extends State<MyApp> {
   String? _jwt;
   String? _role;
   String? _user;
+  String _deploymentText = '';
 
   @override
   void initState() {
     super.initState();
     _loadJwt();
+    _loadDeploymentText();
   }
 
   Future<void> _loadJwt() async {
@@ -39,6 +42,19 @@ class _MyAppState extends State<MyApp> {
       _role = prefs.getString('role');
       _user = prefs.getString('user'); // Add this line
     });
+  }
+
+  Future<void> _loadDeploymentText() async {
+    try {
+      final text = await rootBundle.loadString('assets/deployment.txt');
+      setState(() {
+        _deploymentText = text.trim();
+      });
+    } catch (e) {
+      setState(() {
+        _deploymentText = '';
+      });
+    }
   }
 
   void _showLoginDialog(BuildContext context) {
@@ -75,7 +91,9 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: true,
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('Memory Puzzle Test'),
+          title: Text(
+            'Memory Puzzle Test${_deploymentText.isNotEmpty ? " - $_deploymentText" : ""}',
+          ),
           actions: [
             if (_jwt == null)
               Builder(

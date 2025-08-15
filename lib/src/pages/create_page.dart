@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/constants.dart';
 
 class CreatePage extends StatefulWidget {
@@ -71,23 +72,7 @@ class _CreatePageState extends State<CreatePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          children: [
-            // User name and role
-            Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: Text(
-                'XXXX$userName ($userRole)',
-                style: const TextStyle(fontSize: 16),
-              ),
-            ),
-            const Spacer(),
-            // Avatar (replace with your actual avatar widget)
-            CircleAvatar(
-              child: Text(userName.isNotEmpty ? userName[0].toUpperCase() : '?'),
-            ),
-          ],
-        ),
+        title: const Text('Create the puzzle'),
       ),
       body: Column(
         children: [
@@ -204,14 +189,50 @@ class _CreatePageState extends State<CreatePage> {
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     debugPrint(
-                        'SaveTo: ${_saveToController.text}, Dropdown: $_selectedDropdown, Selected: $_selectedIndexes');
-                    // Add your save logic here
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(
-                          'Saved to "${_saveToController.text}" in "$_selectedDropdown"'),
-                    ));
+                      'SaveTo: ${_saveToController.text}, Dropdown: $_selectedDropdown, Selected: $_selectedIndexes');
+
+                    // Prepare data for the new puzzle setup
+                    final prefs = await SharedPreferences.getInstance();
+                    final jwt = prefs.getString('jwt');
+                    if (jwt == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Login required to save puzzle setup.')),
+                      );
+                      return;
+                    }
+
+                    // Collect selected image UIDs (assuming _imageUrls contains UIDs or URLs)
+                    final selectedUids = _selectedIndexes.map((i) => _imageUrls[i]).toList();
+
+                    // Prepare payload matching PuzzleDto and PuzzleImageDto
+                    final payload = {
+                      'name': _saveToController.text,
+                      'images': selectedUids.map((uid) => {'imageUid': uid}).toList(),
+                      // 'creationTime' and 'id' are typically set by the backend
+                    };
+
+                    // Call the new endpoint (POST recommended for creating new resources)
+                    final url = Uri.parse(AppConstants.puzzleCreateEndpoint);
+                    final response = await http.post(
+                      url,
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer $jwt',
+                      },
+                      body: jsonEncode(payload),
+                    );
+
+                    if (response.statusCode == 200 || response.statusCode == 201) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Puzzle setup saved successfully!')),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to save puzzle setup: ${response.statusCode}')),
+                      );
+                    }
                   },
                   child: const Text('SaveTo'),
                 ),
