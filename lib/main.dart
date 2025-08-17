@@ -120,9 +120,48 @@ class _MyAppState extends State<MyApp> {
                     value: 'logout',
                     child: Text('Logout'),
                   ),
+                  const PopupMenuDivider(),
+                  const PopupMenuItem(
+                    value: 'play',
+                    child: ListTile(
+                      leading: Icon(Icons.play_arrow),
+                      title: Text('Play'),
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'crop',
+                    child: ListTile(
+                      leading: Icon(Icons.crop),
+                      title: Text('Crop'),
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'create',
+                    child: ListTile(
+                      leading: Icon(Icons.create),
+                      title: Text('Create'),
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'users',
+                    child: ListTile(
+                      leading: Icon(Icons.people),
+                      title: Text('Users'),
+                    ),
+                  ),
                 ],
                 onSelected: (value) {
-                  if (value == 'logout') _logout();
+                  if (value == 'logout') {
+                    _logout();
+                  } else if (value == 'play') {
+                    setState(() => _selectedIndex = 0);
+                  } else if (value == 'crop') {
+                    setState(() => _selectedIndex = 1);
+                  } else if (value == 'create') {
+                    setState(() => _selectedIndex = 2);
+                  } else if (value == 'users') {
+                    setState(() => _selectedIndex = 3);
+                  }
                 },
               ),
             ],
@@ -152,37 +191,3 @@ class _MyAppState extends State<MyApp> {
           onTap: (index) {
             setState(() {
               _selectedIndex = index;
-            });
-          },
-        ),
-      ),
-    );
-  }
-
-  int _selectedIndex = 0;
-
-  Widget _buildBody() {
-    if (_selectedIndex == 0) {
-      return const PlayPage();
-    } else if (_selectedIndex == 1) {
-      if (_jwt != null && (_role == 'writer' || _role == 'admin')) {
-        return const ImageCropperPage();
-      } else {
-        return const Center(child: Text('Login required to upload.'));
-      }
-    } else if (_selectedIndex == 2) {
-      if (_jwt != null && (_role == 'writer' || _role == 'admin')) {
-        return const CreatePage();
-      } else {
-        return const Center(child: Text('Login required to play.'));
-      }
-    } else if (_selectedIndex == 3) {
-      if (_jwt != null && _role == 'admin') {
-        return const UsersPage();
-      } else {
-        return const Center(child: Text('Admin access required for user admin.'));
-      }
-    }
-    return const SizedBox.shrink();
-  }
-}

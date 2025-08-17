@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_2/src/utils/api_endpoints.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -34,7 +35,7 @@ class _LoginDialogState extends State<LoginDialog> {
       _loading = true;
       _error = null;
     });
-    final url = Uri.parse(AppConstants.loginEndpoint);
+    final url = Uri.parse(ApiEndpoints.usersLogin);
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},

@@ -18,17 +18,19 @@ class AppConstants {
   static const String defaultImageAsset = 'assets/sample.png';
 
   // App metadata
-  static const String appTitle = 'Image Cropper App';
+  static const String appTitle = 'Wunderwelt Memory Game';
   // Use localhost for debug, Azure for release
   static const String apiBaseUrl = kReleaseMode
-      ? 'https://memorypuzzleapi.azurewebsites.net/api/'
-      : 'http://localhost:5218/api/';
-  static const String loginEndpoint = '${apiBaseUrl}users/login';
-  static const String registerEndpoint = '${apiBaseUrl}users/register';
-  static const String userProfileEndpoint = '${apiBaseUrl}users/profile';
-  static const String imageUploadEndpoint = '${apiBaseUrl}images/upload';
-  static const String imageEndpoint = '${apiBaseUrl}images';
-  static const String imageTestgroupEndpoint = '${apiBaseUrl}images/group/testgroup';
-  static const String puzzleCreateEndpoint = '${apiBaseUrl}puzzles';
-  static const String puzzleReadDefaultEndpoint = '${apiBaseUrl}puzzles/default';
+      ? 'https://memorypuzzleapi.azurewebsites.net'
+      : 'http://localhost:5218';
+
+    /// Replaces placeholders like {id} or {puzzleId} in endpoint strings.
+    /// Usage: ApiEndpoints.replace(ApiEndpoints.imagesGetById, {'id': uid})
+    static String replace(String endpoint, Map<String, String> args) {
+      var url = endpoint;
+      args.forEach((key, value) {
+        url = url.replaceAll('{$key}', value);
+      });
+      return url;
+    }
   }

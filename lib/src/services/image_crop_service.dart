@@ -1,3 +1,4 @@
+import 'package:flutter_application_2/src/utils/api_endpoints.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,7 +22,7 @@ class ImageCropService {
   required Uint8List imageBytes,
   }) async {
     try {
-      final uri = Uri.parse(AppConstants.imageUploadEndpoint);
+      final uri = Uri.parse(ApiEndpoints.imagesUpload);
       final request = http.MultipartRequest('POST', uri);
       request.files.add(
         http.MultipartFile.fromBytes(

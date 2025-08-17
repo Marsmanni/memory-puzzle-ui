@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../utils/constants.dart';
+import '../utils/api_endpoints.dart';
 import 'dart:math';
 
 class PlayPage extends StatefulWidget {
@@ -39,7 +40,7 @@ class _PlayPageState extends State<PlayPage> {
     });
 
     try {
-      final url = Uri.parse(AppConstants.puzzleReadDefaultEndpoint);
+      final url = Uri.parse(ApiEndpoints.puzzlesDefault);
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
@@ -58,7 +59,7 @@ class _PlayPageState extends State<PlayPage> {
 
         // Preload images
         for (final uid in _images) {
-          final imgUrl = '${AppConstants.imageEndpoint}/$uid';
+          final imgUrl = AppConstants.replace(ApiEndpoints.imagesGetById, {'id': uid});
           precacheImage(NetworkImage(imgUrl), context);
         }
       } else {
@@ -205,7 +206,7 @@ class _PlayPageState extends State<PlayPage> {
                   ),
                   itemCount: _images.length * 2,
                   itemBuilder: (context, index) {
-                    final imgUrl = '${AppConstants.imageEndpoint}/${_images[_shuffledIndexes[index]]}';
+                    final imgUrl = AppConstants.replace(ApiEndpoints.imagesGetById, {'id': _images[_shuffledIndexes[index]]});
                     final isMatched = _matchedIndexes.contains(index);
                     final isFlipped = _flipped[index];
                     final isDisabled = isFlipped || isMatched || _selectedIndexes.contains(index);

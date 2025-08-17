@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_2/src/utils/api_endpoints.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -31,7 +32,7 @@ class _CreatePageState extends State<CreatePage> {
 
     try {
       // Replace 'testgroup' with your actual group name or pass it as a parameter
-      final url = Uri.parse(AppConstants.imageTestgroupEndpoint);
+      final url = Uri.parse(ApiEndpoints.imagesTestGroup);
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
@@ -214,7 +215,7 @@ class _CreatePageState extends State<CreatePage> {
                     };
 
                     // Call the new endpoint (POST recommended for creating new resources)
-                    final url = Uri.parse(AppConstants.puzzleCreateEndpoint);
+                    final url = Uri.parse(ApiEndpoints.puzzlesCreate);
                     final response = await http.post(
                       url,
                       headers: {
