@@ -26,6 +26,15 @@ class _PlayPageState extends State<PlayPage> {
   int _playerCount = 1;
   int _currentPlayer = 0;
   List<int> _moves = [0, 0, 0];
+  List<int> _matches = [0, 0, 0];
+
+  final List<Map<String, String>> _placeholders = [
+    {'name': 'Himmel', 'asset': 'assets/placeholder1.png'},
+    {'name': 'Puzzle', 'asset': 'assets/placeholder2.png'},
+    {'name': 'Wiese', 'asset': 'assets/placeholder3.png'},
+    {'name': 'Smiley', 'asset': 'assets/placeholder0.png'},
+  ];
+  int _selectedPlaceholderIndex = 0;
 
   @override
   void initState() {
@@ -77,6 +86,14 @@ class _PlayPageState extends State<PlayPage> {
   }
 
   void _reset() {
+    setState(() {
+      // Reset all play state
+      _matchedIndexes.clear();
+      _selectedIndexes.clear();
+      _currentPlayer = 0;
+      _moves = List<int>.filled(_playerCount, 0);
+      _matches = List<int>.filled(_playerCount, 0);
+    });
     _fetchImages();
   }
 
@@ -86,21 +103,20 @@ class _PlayPageState extends State<PlayPage> {
     setState(() {
       _flipped[index] = true;
       _selectedIndexes.add(index);
-      // Remove: _moves[_currentPlayer]++; // Do NOT increment here
+      // Do NOT increment moves here
     });
 
     if (_selectedIndexes.length == 2) {
-      // Increment moves for current player after every second click
-      setState(() {
-        _moves[_currentPlayer]++;
-      });
-
       final firstIdx = _selectedIndexes[0];
       final secondIdx = _selectedIndexes[1];
       final firstImg = _images[_shuffledIndexes[firstIdx]];
       final secondImg = _images[_shuffledIndexes[secondIdx]];
 
       if (firstImg == secondImg) {
+        // Increment match counter for current player
+        setState(() {
+          _matches[_currentPlayer]++;
+        });
         Future.delayed(const Duration(milliseconds: 500), () {
           setState(() {
             _matchedIndexes.addAll(_selectedIndexes);
@@ -109,6 +125,10 @@ class _PlayPageState extends State<PlayPage> {
           });
         });
       } else {
+        // Increment moves counter for current player on miss
+        setState(() {
+          _moves[_currentPlayer]++;
+        });
         Future.delayed(const Duration(seconds: 1), () {
           setState(() {
             _flipped[firstIdx] = false;
@@ -126,6 +146,7 @@ class _PlayPageState extends State<PlayPage> {
     setState(() {
       _playerCount = count;
       _moves = List<int>.filled(count, 0);
+      _matches = List<int>.filled(count, 0);
       _currentPlayer = 0;
     });
   }
@@ -134,63 +155,84 @@ class _PlayPageState extends State<PlayPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          children: [
-            const Text('Play'),
-            const SizedBox(width: 16),
-            DropdownButton<String>(
-              value: _selectedGroup,
-              items: _groups
-                  .map((group) => DropdownMenuItem(
-                        value: group,
-                        child: Text(group),
-                      ))
-                  .toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() {
-                    _selectedGroup = value;
-                  });
-                  _fetchImages();
-                }
-              },
-            ),
-            const SizedBox(width: 16),
-            ElevatedButton(
-              onPressed: _reset,
-              child: const Text('Reset'),
-            ),
-            const SizedBox(width: 16),
-            // Player count selector
-            DropdownButton<int>(
-              value: _playerCount,
-              items: [1, 2, 3]
-                  .map((count) => DropdownMenuItem(
-                        value: count,
-                        child: Text('$count Player${count > 1 ? 's' : ''}'),
-                      ))
-                  .toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  _onPlayerCountChanged(value);
-                }
-              },
-            ),
-            const SizedBox(width: 16),
-            // Moves counters
-            ...List.generate(_playerCount, (i) => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Chip(
-                label: Text(
-                  'P${i + 1}: ${_moves[i]}${_currentPlayer == i ? " ←" : ""}',
-                  style: TextStyle(
-                    fontWeight: _currentPlayer == i ? FontWeight.bold : FontWeight.normal,
-                  ),
-                ),
-                backgroundColor: _currentPlayer == i ? Colors.blue[100] : Colors.grey[200],
+        title: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              const Text('Play'),
+              const SizedBox(width: 16),
+              DropdownButton<String>(
+                value: _selectedGroup,
+                items: _groups
+                    .map((group) => DropdownMenuItem(
+                          value: group,
+                          child: Text(group),
+                        ))
+                    .toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      _selectedGroup = value;
+                    });
+                    _fetchImages();
+                  }
+                },
               ),
-            )),
-          ],
+              const SizedBox(width: 16),
+              ElevatedButton(
+                onPressed: _reset,
+                child: const Text('Reset'),
+              ),
+              const SizedBox(width: 16),
+              DropdownButton<int>(
+                value: _playerCount,
+                items: [1, 2, 3]
+                    .map((count) => DropdownMenuItem(
+                          value: count,
+                          child: Text('$count Player${count > 1 ? 's' : ''}'),
+                        ))
+                    .toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    _onPlayerCountChanged(value);
+                  }
+                },
+              ),
+              const SizedBox(width: 16),
+              ...List.generate(_playerCount, (i) => Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Chip(
+                  label: Text(
+                    'P${i + 1}: ${_moves[i]} moves, ${_matches[i]} matches${_currentPlayer == i ? " ←" : ""}',
+                    style: TextStyle(
+                      fontWeight: _currentPlayer == i ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                  backgroundColor: _currentPlayer == i ? Colors.blue[100] : Colors.grey[200],
+                ),
+              )),
+              const SizedBox(width: 16),
+              PopupMenuButton<int>(
+                icon: const Icon(Icons.settings),
+                tooltip: 'Settings',
+                itemBuilder: (context) => [
+                  PopupMenuItem<int>(
+                    enabled: false,
+                    child: Text('Select Placeholder'),
+                  ),
+                  ...List.generate(_placeholders.length, (i) => PopupMenuItem<int>(
+                    value: i,
+                    child: Text(_placeholders[i]['name']!),
+                  )),
+                ],
+                onSelected: (value) {
+                  setState(() {
+                    _selectedPlaceholderIndex = value;
+                  });
+                },
+              ),
+            ],
+          ),
         ),
       ),
       body: _loading
@@ -227,7 +269,7 @@ class _PlayPageState extends State<PlayPage> {
                                 final showFront = rotate.value < 0.5;
                                 Widget cardContent = showFront
                                     ? Image.asset(
-                                        'assets/placeholder.png',
+                                        _placeholders[_selectedPlaceholderIndex]['asset']!,
                                         fit: BoxFit.cover,
                                       )
                                     : Image.network(

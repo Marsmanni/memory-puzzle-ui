@@ -168,26 +168,34 @@ class _MyAppState extends State<MyApp> {
           ],
         ),
         body: _buildBody(),
-        bottomNavigationBar: BottomNavigationBar(
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.play_arrow),
-              label: 'Play',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.crop),
-              label: 'Crop',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.create),
-              label: 'Create',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.people),
-              label: 'Users',
-            ),
-          ],
-          currentIndex: _selectedIndex,
-          onTap: (index) {
-            setState(() {
-              _selectedIndex = index;
+      ),
+    );
+  }
+
+  int _selectedIndex = 0;
+
+  Widget _buildBody() {
+    if (_selectedIndex == 0) {
+      return const PlayPage();
+    } else if (_selectedIndex == 1) {
+      if (_jwt != null && (_role == 'writer' || _role == 'admin')) {
+        return const ImageCropperPage();
+      } else {
+        return const Center(child: Text('Login required to upload.'));
+      }
+    } else if (_selectedIndex == 2) {
+      if (_jwt != null && (_role == 'writer' || _role == 'admin')) {
+        return const CreatePage();
+      } else {
+        return const Center(child: Text('Login required to play.'));
+      }
+    } else if (_selectedIndex == 3) {
+      if (_jwt != null && _role == 'admin') {
+        return const UsersPage();
+      } else {
+        return const Center(child: Text('Admin access required for user admin.'));
+      }
+    }
+    return const SizedBox.shrink();
+  }
+}
