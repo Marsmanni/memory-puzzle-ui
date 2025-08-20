@@ -18,10 +18,60 @@ class _CreatePageState extends State<CreatePage> {
   bool _loading = true;
   String? _error;
 
+  List<Map<String, dynamic>> _fileGroups = [];
+  String? _selectedGroupName;
+  bool _loadingFileGroups = true;
+
   @override
   void initState() {
     super.initState();
+    _fetchFileGroups();
     _fetchImages();
+  }
+
+  Future<void> _fetchFileGroups() async {
+    setState(() {
+      _loadingFileGroups = true;
+    });
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jwt = prefs.getString('jwt');
+      final url = Uri.parse(ApiEndpoints.imagesFilegroups);
+      final response = await http.get(
+        url,
+        headers: {
+          'Authorization': 'Bearer $jwt',
+        },
+      );
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          _fileGroups = data
+              .where((e) => e['groupName'] != null && (e['groupName'] as String).isNotEmpty)
+              .map<Map<String, dynamic>>((e) => {
+                    //'groupId': e['groupId'],
+                    'groupName': e['groupName'],
+                    'imageCount': e['imageCount'],
+                  })
+              .toList();
+          _selectedGroupName = _fileGroups.isNotEmpty ? _fileGroups[0]['groupName'] : null;
+          _loadingFileGroups = false;
+        });
+      } else {
+        setState(() {
+          _fileGroups = [];
+          _selectedGroupName = null;
+          _loadingFileGroups = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _fileGroups = [];
+        _selectedGroupName = null;
+        _loadingFileGroups = false;
+      });
+    }
   }
 
   Future<void> _fetchImages() async {
@@ -178,6 +228,27 @@ class _CreatePageState extends State<CreatePage> {
                   ),
                 ),
                 const SizedBox(width: 16),
+                SizedBox(
+                  width: 180,
+                  child: _loadingFileGroups
+                      ? const CircularProgressIndicator()
+                      : DropdownButton<String>(
+                          value: _selectedGroupName,
+                          items: _fileGroups
+                              .map((group) => DropdownMenuItem<String>(
+                                    value: group['groupName'],
+                                    child: Text(
+                                        '${group['groupName']} (${group['imageCount']})'),
+                                  ))
+                              .toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedGroupName = value;
+                            });
+                          },
+                        ),
+                ),
+                const SizedBox(width: 8),
                 Expanded(
                   child: TextField(
                     controller: _saveToController,

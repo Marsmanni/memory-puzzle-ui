@@ -35,6 +35,10 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
 
   Uint8List? _croppedImageBytes;
 
+  List<String> _filegroups = [DateTime.now().toIso8601String().substring(0, 8)]; // Default: today (YYYYMMDD)
+  String _selectedFilegroup = DateTime.now().toIso8601String().substring(0, 8);
+  final TextEditingController _filegroupController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -46,6 +50,7 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
   @override
   void dispose() {
     _focusNode.dispose();
+    _filegroupController.dispose();
     super.dispose();
   }
 
@@ -600,7 +605,7 @@ Future<ui.Image> uint8ListToUiImage(Uint8List bytes) async {
 
       // Upload image
       final uploadResult = await ImageCropService.uploadImageBytesToEndpoint(
-        filegroup: '1',
+        filegroup: _selectedFilegroup, // Use selected filegroup
         imageBytes: pngData,
       );
 
@@ -689,6 +694,53 @@ Future<ui.Image> uint8ListToUiImage(Uint8List bytes) async {
         title: Row(
           children: [
             const Text('Image Cropper'),
+            const SizedBox(width: 16),
+            DropdownButton<String>(
+              value: _selectedFilegroup,
+              items: _filegroups
+                  .map((fg) => DropdownMenuItem(
+                        value: fg,
+                        child: Text(fg),
+                      ))
+                  .toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    _selectedFilegroup = value;
+                  });
+                }
+              },
+            ),
+            const SizedBox(width: 8),
+            SizedBox(
+              width: 100,
+              child: TextField(
+                controller: _filegroupController,
+                decoration: const InputDecoration(
+                  hintText: 'Add filegroup',
+                  contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 8),
+                ),
+                onSubmitted: (value) {
+                  if (value.isNotEmpty && !_filegroups.contains(value)) {
+                    setState(() {
+                      _filegroups.add(value);
+                      _selectedFilegroup = value;
+                      _filegroupController.clear();
+                    });
+                  }
+                },
+              ),
+            ),
+            const SizedBox(width: 16),
+            ElevatedButton(
+              onPressed: pickImageWeb,
+              child: const Text('Select Photo Web'),
+            ),
+            const SizedBox(width: 8),
+            ElevatedButton(
+              onPressed: _cropAndSaveImage,
+              child: const Text('Cut & Save'),
+            ),
             const SizedBox(width: 16),
             Text(
               'kIsWeb: ${kIsWeb ? "true" : "false"}',

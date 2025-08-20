@@ -271,10 +271,14 @@ class _PlayPageState extends State<PlayPage> {
                                     ? Image.asset(
                                         _placeholders[_selectedPlaceholderIndex]['asset']!,
                                         fit: BoxFit.cover,
+                                        width: double.infinity,
+                                        height: double.infinity,
                                       )
                                     : Image.network(
                                         imgUrl,
                                         fit: BoxFit.cover,
+                                        width: double.infinity,
+                                        height: double.infinity,
                                       );
                                 if (isMatched) {
                                   cardContent = ColorFiltered(

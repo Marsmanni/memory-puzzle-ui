@@ -3,6 +3,13 @@
 import '../utils/constants.dart';
 class ApiEndpoints {
   static const String apiBaseUrl = AppConstants.apiBaseUrl;
+  static final String utilsCreateTables = '${AppConstants.apiBaseUrl}/api/v1/utils/createtables';
+  static final String utilsCreateAdmin = '${AppConstants.apiBaseUrl}/api/v1/utils/admin';
+  static final String utilsCreateUsers = '${AppConstants.apiBaseUrl}/api/v1/utils/users';
+  static final String utilsDeleteUsers = '${AppConstants.apiBaseUrl}/api/v1/utils/users';
+  static final String utilsDartExporter = '${AppConstants.apiBaseUrl}/api/v1/utils/exportroutes';
+  static final String adminAllUsers = '${AppConstants.apiBaseUrl}/api/v1/admin/users';
+  static final String adminAllPuzzles = '${AppConstants.apiBaseUrl}/api/v1/admin/puzzles';
   static final String puzzlesGetAll = '${AppConstants.apiBaseUrl}/api/v1/puzzles';
   static final String puzzlesGetById = '${AppConstants.apiBaseUrl}/api/v1/puzzles/{id}';
   static final String puzzlesCreate = '${AppConstants.apiBaseUrl}/api/v1/puzzles';
@@ -10,6 +17,7 @@ class ApiEndpoints {
   static final String puzzlesLogPuzzle = '${AppConstants.apiBaseUrl}/api/v1/puzzles/{puzzleId}/log';
   static final String puzzlesDefault = '${AppConstants.apiBaseUrl}/api/v1/puzzles/default';
   static final String puzzlesDefaults = '${AppConstants.apiBaseUrl}/api/v1/puzzles/defaults';
+  static final String puzzlesFileGroups = '${AppConstants.apiBaseUrl}/api/v1/puzzles/filegroups';
   static final String imagesGetAll = '${AppConstants.apiBaseUrl}/api/v1/images';
   static final String imagesGetById = '${AppConstants.apiBaseUrl}/api/v1/images/{id}';
   static final String imagesUpload = '${AppConstants.apiBaseUrl}/api/v1/images/upload';
@@ -18,6 +26,7 @@ class ApiEndpoints {
   static final String imagesGetByPuzzleId = '${AppConstants.apiBaseUrl}/api/v1/images/puzzle/{puzzleId}';
   static final String imagesAzureBlobs = '${AppConstants.apiBaseUrl}/api/v1/images/azureblobs';
   static final String imagesTestGroup = '${AppConstants.apiBaseUrl}/api/v1/images/group/test';
+  static final String imagesFilegroups = '${AppConstants.apiBaseUrl}/api/v1/images/filegroups';
   static final String usersGetAll = '${AppConstants.apiBaseUrl}/api/v1/users';
   static final String usersGetById = '${AppConstants.apiBaseUrl}/api/v1/users/{id}';
   static final String usersCreate = '${AppConstants.apiBaseUrl}/api/v1/users';
@@ -30,8 +39,4 @@ class ApiEndpoints {
   static final String samplesGetReader = '${AppConstants.apiBaseUrl}/api/v1/samples/user/reader';
   static final String samplesGetRoleReader = '${AppConstants.apiBaseUrl}/api/v1/samples/role/reader';
   static final String samplesGetRoleWriter = '${AppConstants.apiBaseUrl}/api/v1/samples/role/writer';
-  static final String samplesCreateAdmin = '${AppConstants.apiBaseUrl}/api/v1/samples/admin';
-  static final String samplesCreateUsers = '${AppConstants.apiBaseUrl}/api/v1/samples/users';
-  static final String samplesDeleteUsers = '${AppConstants.apiBaseUrl}/api/v1/samples/users';
-  static final String samplesDartExporter = '${AppConstants.apiBaseUrl}/api/v1/samples/exportroutes';
 }
