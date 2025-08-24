@@ -89,39 +89,36 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  @@override
-Widget build(BuildContext context) {
-  return MaterialApp(
-    title: AppConstants.appTitle,
-    debugShowCheckedModeBanner: true,
-    home: Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Memory Puzzle Test${_deploymentText.isNotEmpty ? " - $_deploymentText" : ""}',
-        ),
-        actions: [
-          if (_jwt == null)
-            Builder(
-              builder: (context) => IconButton(
-                icon: const Icon(Icons.login),
-                tooltip: 'Login',
-                onPressed: () => _showLoginDialog(context),
-              ),
-            )
-          else ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Center(
-                child: Text(
-                  '${_user ?? "?"} (${_role ?? "?"})',
-                  style: const TextStyle(fontSize: 16),
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: AppConstants.appTitle,
+      debugShowCheckedModeBanner: true,
+      home: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            'Memory Puzzle Test${_deploymentText.isNotEmpty ? " - $_deploymentText" : ""}',
+          ),
+          actions: [
+            if (_jwt == null)
+              Builder(
+                builder: (context) => IconButton(
+                  icon: const Icon(Icons.login),
+                  tooltip: 'Login',
+                  onPressed: () => _showLoginDialog(context),
+                ),
+              )
+            else ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Center(
+                  child: Text(
+                    '${_user ?? "?"} (${_role ?? "?"})',
+                    style: const TextStyle(fontSize: 16),
+                  ),
                 ),
               ),
-            ),
-            
-            // This Builder provides a new, stable context for the menu actions.
-            Builder(
-              builder: (context) => PopupMenuButton<String>(
+              PopupMenuButton<String>(
                 icon: const CircleAvatar(child: Icon(Icons.person)),
                 itemBuilder: (context) => [
                   const PopupMenuItem(
@@ -157,7 +154,7 @@ Widget build(BuildContext context) {
                       title: Text('Users'),
                     ),
                   ),
-                  if (_role == 'admin')
+                  if (_role == 'admin') // Check if the user is admin
                     const PopupMenuItem(
                       value: 'systemInfo',
                       child: ListTile(
@@ -178,17 +175,16 @@ Widget build(BuildContext context) {
                   } else if (value == 'users') {
                     setState(() => _selectedIndex = 3);
                   } else if (value == 'systemInfo') {
-                    // Use a temporary variable to hold the context from the Builder
+                  
+                     // Always check if the widget is mounted before using setState or context
+                    
                     final safeContext = context;
-                    
-                    final response = await AuthHttpService.get(Uri.parse(ApiEndpoints.adminInfo));
-                    
-                    if (!mounted) return;
-                    
+
+                   final response = await AuthHttpService.get(Uri.parse(ApiEndpoints.adminInfo));
+                  if (!mounted) return;
                     if (response.statusCode == 200) {
                       final info = SystemInfoDto.fromJson(jsonDecode(response.body));
-                      
-                      // Now, use the safeContext for the showDialog call
+                      // Use a context from inside the widget tree
                       showDialog(
                         context: safeContext,
                         builder: (context) => AlertDialog(
@@ -218,14 +214,14 @@ Widget build(BuildContext context) {
                   }
                 },
               ),
-            ),
+            ],
           ],
-        ],
+        ),
+        body: _buildBody(),
       ),
-      body: _buildBody(),
-    ),
-  );
-}
+    );
+  }
+
   int _selectedIndex = 0;
 
   Widget _buildBody() {
