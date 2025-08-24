@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_application_2/src/dtos/api_dtos.dart';
 import 'src/pages/image_cropper_page.dart';
 import 'src/pages/play_page.dart';
 import 'src/pages/create_page.dart';
@@ -7,6 +8,10 @@ import 'src/pages/users_page.dart';
 import 'src/widgets/login_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'src/utils/constants.dart';
+import 'src/services/auth_http_service.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'src/utils/api_endpoints.dart';
 
 /// Entry point of the application
 void main() {
@@ -61,11 +66,11 @@ class _MyAppState extends State<MyApp> {
     showDialog(
       context: context,
       builder: (ctx) => LoginDialog(
-        onLoginSuccess: (jwt, role, user) { // Update callback to include user
+        onLoginSuccess: (jwt, role, user) {
           setState(() {
             _jwt = jwt;
             _role = role;
-            _user = user; // Add this line
+            _user = user;
           });
         },
       ),
@@ -84,36 +89,39 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: AppConstants.appTitle,
-      debugShowCheckedModeBanner: true,
-      home: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            'Memory Puzzle Test${_deploymentText.isNotEmpty ? " - $_deploymentText" : ""}',
-          ),
-          actions: [
-            if (_jwt == null)
-              Builder(
-                builder: (context) => IconButton(
-                  icon: const Icon(Icons.login),
-                  tooltip: 'Login',
-                  onPressed: () => _showLoginDialog(context),
-                ),
-              )
-            else ...[
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Center(
-                  child: Text(
-                    '${_user ?? "?"} (${_role ?? "?"})',
-                    style: const TextStyle(fontSize: 16),
-                  ),
+  @@override
+Widget build(BuildContext context) {
+  return MaterialApp(
+    title: AppConstants.appTitle,
+    debugShowCheckedModeBanner: true,
+    home: Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Memory Puzzle Test${_deploymentText.isNotEmpty ? " - $_deploymentText" : ""}',
+        ),
+        actions: [
+          if (_jwt == null)
+            Builder(
+              builder: (context) => IconButton(
+                icon: const Icon(Icons.login),
+                tooltip: 'Login',
+                onPressed: () => _showLoginDialog(context),
+              ),
+            )
+          else ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Center(
+                child: Text(
+                  '${_user ?? "?"} (${_role ?? "?"})',
+                  style: const TextStyle(fontSize: 16),
                 ),
               ),
-              PopupMenuButton<String>(
+            ),
+            
+            // This Builder provides a new, stable context for the menu actions.
+            Builder(
+              builder: (context) => PopupMenuButton<String>(
                 icon: const CircleAvatar(child: Icon(Icons.person)),
                 itemBuilder: (context) => [
                   const PopupMenuItem(
@@ -149,8 +157,16 @@ class _MyAppState extends State<MyApp> {
                       title: Text('Users'),
                     ),
                   ),
+                  if (_role == 'admin')
+                    const PopupMenuItem(
+                      value: 'systemInfo',
+                      child: ListTile(
+                        leading: Icon(Icons.info),
+                        title: Text('System Info'),
+                      ),
+                    ),
                 ],
-                onSelected: (value) {
+                onSelected: (value) async {
                   if (value == 'logout') {
                     _logout();
                   } else if (value == 'play') {
@@ -161,17 +177,55 @@ class _MyAppState extends State<MyApp> {
                     setState(() => _selectedIndex = 2);
                   } else if (value == 'users') {
                     setState(() => _selectedIndex = 3);
+                  } else if (value == 'systemInfo') {
+                    // Use a temporary variable to hold the context from the Builder
+                    final safeContext = context;
+                    
+                    final response = await AuthHttpService.get(Uri.parse(ApiEndpoints.adminInfo));
+                    
+                    if (!mounted) return;
+                    
+                    if (response.statusCode == 200) {
+                      final info = SystemInfoDto.fromJson(jsonDecode(response.body));
+                      
+                      // Now, use the safeContext for the showDialog call
+                      showDialog(
+                        context: safeContext,
+                        builder: (context) => AlertDialog(
+                          title: const Text('System Info'),
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Database Provider: ${info.databaseProvider}'),
+                              Text('Connection String: ${info.databaseConnectionString}'),
+                              Text('EF Core Version: ${info.efCoreVersion}'),
+                              Text('ASP.NET Version: ${info.aspNetVersion}'),
+                              Text('Server IP: ${info.serverIp}'),
+                              Text('Client IP: ${info.clientIp}'),
+                              Text('Server Time: ${info.serverTime}'),
+                            ],
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: const Text('Close'),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
                   }
                 },
               ),
-            ],
+            ),
           ],
-        ),
-        body: _buildBody(),
+        ],
       ),
-    );
-  }
-
+      body: _buildBody(),
+    ),
+  );
+}
   int _selectedIndex = 0;
 
   Widget _buildBody() {

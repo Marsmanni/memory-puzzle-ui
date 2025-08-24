@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+import '../services/auth_http_service.dart';
 import '../dtos/api_dtos.dart';
 import '../utils/api_endpoints.dart';
 
@@ -33,26 +33,11 @@ class _UsersPageState extends State<UsersPage> {
     });
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final jwt = prefs.getString('jwt');
-
       // Fetch puzzles
-      final puzzlesUrl = Uri.parse(ApiEndpoints.adminAllPuzzles); // Add this to your ApiEndpoints
-      final puzzlesResponse = await http.get(
-        puzzlesUrl,
-        headers: {
-          'Authorization': 'Bearer $jwt',
-        },
-      );
+      final puzzlesResponse =  await AuthHttpService.get(Uri.parse(ApiEndpoints.adminAllPuzzles));
 
       // Fetch users
-      final usersUrl = Uri.parse(ApiEndpoints.adminAllUsers);
-      final usersResponse = await http.get(
-        usersUrl,
-        headers: {
-          'Authorization': 'Bearer $jwt',
-        },
-      );
+      final usersResponse =  await AuthHttpService.get(Uri.parse(ApiEndpoints.adminAllUsers));
 
       if (puzzlesResponse.statusCode == 200 && usersResponse.statusCode == 200) {
         final List<dynamic> puzzlesData = jsonDecode(puzzlesResponse.body);

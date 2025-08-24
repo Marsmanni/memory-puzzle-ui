@@ -49,8 +49,7 @@ class _PlayPageState extends State<PlayPage> {
     });
 
     try {
-      final url = Uri.parse(ApiEndpoints.puzzlesDefault);
-      final response = await http.get(url);
+      final response = await http.get(Uri.parse(ApiEndpoints.puzzlesDefault));
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body);

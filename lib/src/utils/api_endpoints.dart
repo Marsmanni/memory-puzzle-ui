@@ -3,11 +3,12 @@
 import '../utils/constants.dart';
 class ApiEndpoints {
   static const String apiBaseUrl = AppConstants.apiBaseUrl;
-  static final String utilsCreateTables = '${AppConstants.apiBaseUrl}/api/v1/utils/createtables';
   static final String utilsCreateAdmin = '${AppConstants.apiBaseUrl}/api/v1/utils/admin';
   static final String utilsCreateUsers = '${AppConstants.apiBaseUrl}/api/v1/utils/users';
   static final String utilsDeleteUsers = '${AppConstants.apiBaseUrl}/api/v1/utils/users';
-  static final String utilsDartExporter = '${AppConstants.apiBaseUrl}/api/v1/utils/exportroutes';
+  static final String utilsDartExporterRoutes = '${AppConstants.apiBaseUrl}/api/v1/utils/exportroutes';
+  static final String utilsDartExporterDtos = '${AppConstants.apiBaseUrl}/api/v1/utils/exportdtos';
+  static final String adminInfo = '${AppConstants.apiBaseUrl}/api/v1/admin/info';
   static final String adminAllUsers = '${AppConstants.apiBaseUrl}/api/v1/admin/users';
   static final String adminAllPuzzles = '${AppConstants.apiBaseUrl}/api/v1/admin/puzzles';
   static final String puzzlesGetAll = '${AppConstants.apiBaseUrl}/api/v1/puzzles';

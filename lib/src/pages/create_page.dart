@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_2/src/utils/api_endpoints.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/constants.dart';
+import '../services/auth_http_service.dart';
 
 class CreatePage extends StatefulWidget {
   const CreatePage({Key? key}) : super(key: key);
@@ -35,15 +35,7 @@ class _CreatePageState extends State<CreatePage> {
     });
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final jwt = prefs.getString('jwt');
-      final url = Uri.parse(ApiEndpoints.imagesFilegroups);
-      final response = await http.get(
-        url,
-        headers: {
-          'Authorization': 'Bearer $jwt',
-        },
-      );
+      final response = await AuthHttpService.get(Uri.parse(ApiEndpoints.imagesFilegroups));
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {
@@ -265,16 +257,6 @@ class _CreatePageState extends State<CreatePage> {
                     debugPrint(
                       'SaveTo: ${_saveToController.text}, Dropdown: $_selectedDropdown, Selected: $_selectedIndexes');
 
-                    // Prepare data for the new puzzle setup
-                    final prefs = await SharedPreferences.getInstance();
-                    final jwt = prefs.getString('jwt');
-                    if (jwt == null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Login required to save puzzle setup.')),
-                      );
-                      return;
-                    }
-
                     // Collect selected image UIDs (assuming _imageUrls contains UIDs or URLs)
                     final selectedUids = _selectedIndexes.map((i) => _imageUrls[i]).toList();
 
@@ -286,15 +268,7 @@ class _CreatePageState extends State<CreatePage> {
                     };
 
                     // Call the new endpoint (POST recommended for creating new resources)
-                    final url = Uri.parse(ApiEndpoints.puzzlesCreate);
-                    final response = await http.post(
-                      url,
-                      headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer $jwt',
-                      },
-                      body: jsonEncode(payload),
-                    );
+                    final response = await AuthHttpService.post(Uri.parse(ApiEndpoints.puzzlesCreate), payload);
 
                     if (response.statusCode == 200 || response.statusCode == 201) {
                       ScaffoldMessenger.of(context).showSnackBar(

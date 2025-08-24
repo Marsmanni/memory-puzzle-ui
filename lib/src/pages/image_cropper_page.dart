@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:async';
 import 'dart:ui' as ui;
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../models/image_transform_model.dart';
 import '../services/image_service.dart';
 import '../services/image_crop_service.dart';
@@ -12,6 +14,9 @@ import '../widgets/image_cropper_overlay.dart';
 import '../widgets/transformable_image_widget.dart';
 import '../utils/constants.dart';
 import '../utils/log.dart';
+import '../dtos/api_dtos.dart';
+import '../utils/api_endpoints.dart';
+import '../services/auth_http_service.dart';
 
 /// Main page for image cropping functionality
 class ImageCropperPage extends StatefulWidget {
@@ -35,9 +40,10 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
 
   Uint8List? _croppedImageBytes;
 
-  List<String> _filegroups = [DateTime.now().toIso8601String().substring(0, 8)]; // Default: today (YYYYMMDD)
-  String _selectedFilegroup = DateTime.now().toIso8601String().substring(0, 8);
+  List<FileGroupDto> _filegroups = [];
+  String? _selectedFilegroupName;
   final TextEditingController _filegroupController = TextEditingController();
+  bool _loadingFilegroups = true;
 
   @override
   void initState() {
@@ -45,6 +51,7 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
     _transformModel = ImageTransformModel();
     _loadImageAsset();
     _focusNode.requestFocus();
+    _fetchFilegroups();
   }
 
   @override
@@ -605,7 +612,7 @@ Future<ui.Image> uint8ListToUiImage(Uint8List bytes) async {
 
       // Upload image
       final uploadResult = await ImageCropService.uploadImageBytesToEndpoint(
-        filegroup: _selectedFilegroup, // Use selected filegroup
+        filegroup: _selectedFilegroupName ?? '', // Use selected filegroup id
         imageBytes: pngData,
       );
 
@@ -687,6 +694,37 @@ Future<ui.Image> uint8ListToUiImage(Uint8List bytes) async {
     });
   }
 
+  Future<void> _fetchFilegroups() async {
+    setState(() {
+      _loadingFilegroups = true;
+    });
+    try {
+      final response = await AuthHttpService.get(Uri.parse(ApiEndpoints.imagesFilegroups));
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          _filegroups = data
+              .map<FileGroupDto>((e) => FileGroupDto.fromJson(e))
+              .toList();
+          _selectedFilegroupName = _filegroups.isNotEmpty ? _filegroups[0].groupName : "";
+          _loadingFilegroups = false;
+        });
+      } else {
+        setState(() {
+          _filegroups = [];
+          _selectedFilegroupName = null;
+          _loadingFilegroups = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _filegroups = [];
+        _selectedFilegroupName = null;
+        _loadingFilegroups = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -695,36 +733,53 @@ Future<ui.Image> uint8ListToUiImage(Uint8List bytes) async {
           children: [
             const Text('Image Cropper'),
             const SizedBox(width: 16),
-            DropdownButton<String>(
-              value: _selectedFilegroup,
-              items: _filegroups
-                  .map((fg) => DropdownMenuItem(
-                        value: fg,
-                        child: Text(fg),
-                      ))
-                  .toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() {
-                    _selectedFilegroup = value;
-                  });
-                }
-              },
-            ),
+            // Label for filegroup selector
+            const Text('Filegroup:', style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(width: 8),
+            // Filegroup selector
             SizedBox(
-              width: 100,
+              width: 220,
+              child: _loadingFilegroups
+                  ? const CircularProgressIndicator()
+                  : DropdownButton<String>(
+                      value: _selectedFilegroupName,
+                      isExpanded: true,
+                      items: _filegroups
+                          .map((fg) => DropdownMenuItem(
+                                value: fg.groupName,
+                                child: Text('${fg.groupName} (${fg.imageCount})'),
+                              ))
+                          .toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() {
+                            _selectedFilegroupName = value;
+                          });
+                        }
+                      },
+                    ),
+            ),
+            const SizedBox(width: 16),
+            // New filegroup input
+            SizedBox(
+              width: 120,
               child: TextField(
                 controller: _filegroupController,
                 decoration: const InputDecoration(
+                  labelText: 'New filegroup',
                   hintText: 'Add filegroup',
                   contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 8),
                 ),
                 onSubmitted: (value) {
-                  if (value.isNotEmpty && !_filegroups.contains(value)) {
+                  if (value.isNotEmpty &&
+                      !_filegroups.any((fg) => fg.groupName == value)) {
                     setState(() {
-                      _filegroups.add(value);
-                      _selectedFilegroup = value;
+                      final newGroup = FileGroupDto(
+                        groupName: value,
+                        imageCount: 0,
+                      );
+                      _filegroups.add(newGroup);
+                      _selectedFilegroupName = newGroup.groupName;
                       _filegroupController.clear();
                     });
                   }
