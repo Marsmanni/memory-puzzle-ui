@@ -10,14 +10,19 @@ class FileGroupDto {
   });
 
   factory FileGroupDto.fromJson(Map<String, dynamic> json) => FileGroupDto(
-    groupName: json['groupName'],
+    groupName: json['groupName'] ?? '',
     imageCount: json['imageCount'] ?? 0,
   );
+
+  Map<String, dynamic> toJson() => {
+    'groupName': groupName,
+    'imageCount': imageCount,
+  };
 }
 
 class LoginDto {
-  final String username;
-  final String password;
+  String username;
+  String password;
 
   LoginDto({
     required this.username,
@@ -25,9 +30,14 @@ class LoginDto {
   });
 
   factory LoginDto.fromJson(Map<String, dynamic> json) => LoginDto(
-    username: json['username'],
-    password: json['password'],
+    username: json['username'] ?? '',
+    password: json['password'] ?? '',
   );
+
+  Map<String, dynamic> toJson() => {
+    'username': username,
+    'password': password,
+  };
 }
 
 class PuzzleAdminDto {
@@ -36,7 +46,7 @@ class PuzzleAdminDto {
   final String creator;
   final DateTime creationTime;
   final int imageCount;
-  final bool isPublic;
+  bool isPublic;
 
   PuzzleAdminDto({
     required this.id,
@@ -49,60 +59,103 @@ class PuzzleAdminDto {
 
   factory PuzzleAdminDto.fromJson(Map<String, dynamic> json) => PuzzleAdminDto(
     id: json['id'] ?? 0,
-    name: json['name'],
-    creator: json['creator'],
-    creationTime: json['creationTime'],
+    name: json['name'] ?? '',
+    creator: json['creator'] ?? '',
+    creationTime: DateTime.parse(json['creationTime']),
     imageCount: json['imageCount'] ?? 0,
     isPublic: json['isPublic'] ?? false,
   );
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'creator': creator,
+    'creationTime': creationTime,
+    'imageCount': imageCount,
+    'isPublic': isPublic,
+  };
+}
+
+class PuzzleDtoBase {
+  String name;
+  List<PuzzleImageDto> images;
+
+  PuzzleDtoBase({
+    required this.name,
+    required this.images,
+  });
+
+  factory PuzzleDtoBase.fromJson(Map<String, dynamic> json) => PuzzleDtoBase(
+    name: json['name'] ?? '',
+    images: (json['images'] as List<dynamic>?)?.map((e) => PuzzleImageDto.fromJson(e as Map<String, dynamic>)).toList() ?? [],
+  );
+
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'images': images,
+  };
 }
 
 class PuzzleDto {
-  final int id;
-  final String name;
-  final DateTime creationTime;
-  final String author;
-  final String authorRole;
-  final bool isPublic;
-  final List<PuzzleImageDto> images;
+  int id;
+  DateTime creationTime;
+  String author;
+  String authorRole;
+  bool isPublic;
+  String name;
+  List<PuzzleImageDto> images;
 
   PuzzleDto({
     required this.id,
-    required this.name,
     required this.creationTime,
     required this.author,
     required this.authorRole,
     required this.isPublic,
+    required this.name,
     required this.images,
   });
 
   factory PuzzleDto.fromJson(Map<String, dynamic> json) => PuzzleDto(
     id: json['id'] ?? 0,
-    name: json['name'],
-    creationTime: json['creationTime'],
-    author: json['author'],
-    authorRole: json['authorRole'],
+    creationTime: DateTime.parse(json['creationTime']),
+    author: json['author'] ?? '',
+    authorRole: json['authorRole'] ?? '',
     isPublic: json['isPublic'] ?? false,
-    images: json['images'],
+    name: json['name'] ?? '',
+    images: (json['images'] as List<dynamic>?)?.map((e) => PuzzleImageDto.fromJson(e as Map<String, dynamic>)).toList() ?? [],
   );
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'creationTime': creationTime,
+    'author': author,
+    'authorRole': authorRole,
+    'isPublic': isPublic,
+    'name': name,
+    'images': images,
+  };
 }
 
 class PuzzleImageDto {
-  final String imageUid;
+  String imageUid;
 
   PuzzleImageDto({
     required this.imageUid,
   });
 
   factory PuzzleImageDto.fromJson(Map<String, dynamic> json) => PuzzleImageDto(
-    imageUid: json['imageUid'],
+    imageUid: json['imageUid'] ?? '',
   );
+
+  Map<String, dynamic> toJson() => {
+    'imageUid': imageUid,
+  };
 }
 
 class ServiceDto {
-  final String serviceType;
-  final String implementationType;
-  final String lifetime;
+  String serviceType;
+  String implementationType;
+  String lifetime;
 
   ServiceDto({
     required this.serviceType,
@@ -111,32 +164,42 @@ class ServiceDto {
   });
 
   factory ServiceDto.fromJson(Map<String, dynamic> json) => ServiceDto(
-    serviceType: json['serviceType'],
-    implementationType: json['implementationType'],
-    lifetime: json['lifetime'],
+    serviceType: json['serviceType'] ?? '',
+    implementationType: json['implementationType'] ?? '',
+    lifetime: json['lifetime'] ?? '',
   );
+
+  Map<String, dynamic> toJson() => {
+    'serviceType': serviceType,
+    'implementationType': implementationType,
+    'lifetime': lifetime,
+  };
 }
 
 class ServiceListProvider {
-  final List<ServiceDto> services;
+  List<ServiceDto> services;
 
   ServiceListProvider({
     required this.services,
   });
 
   factory ServiceListProvider.fromJson(Map<String, dynamic> json) => ServiceListProvider(
-    services: json['services'],
+    services: (json['services'] as List<dynamic>?)?.map((e) => ServiceDto.fromJson(e as Map<String, dynamic>)).toList() ?? [],
   );
+
+  Map<String, dynamic> toJson() => {
+    'services': services,
+  };
 }
 
 class SystemInfoDto {
-  final String databaseProvider;
-  final String databaseConnectionString;
-  final String efCoreVersion;
-  final String aspNetVersion;
-  final String serverIp;
-  final String clientIp;
-  final DateTime serverTime;
+  String databaseProvider;
+  String databaseConnectionString;
+  String efCoreVersion;
+  String aspNetVersion;
+  String serverIp;
+  String clientIp;
+  DateTime serverTime;
 
   SystemInfoDto({
     required this.databaseProvider,
@@ -149,21 +212,31 @@ class SystemInfoDto {
   });
 
   factory SystemInfoDto.fromJson(Map<String, dynamic> json) => SystemInfoDto(
-    databaseProvider: json['databaseProvider'],
-    databaseConnectionString: json['databaseConnectionString'],
-    efCoreVersion: json['efCoreVersion'],
-    aspNetVersion: json['aspNetVersion'],
-    serverIp: json['serverIp'],
-    clientIp: json['clientIp'],
+    databaseProvider: json['databaseProvider'] ?? '',
+    databaseConnectionString: json['databaseConnectionString'] ?? '',
+    efCoreVersion: json['efCoreVersion'] ?? '',
+    aspNetVersion: json['aspNetVersion'] ?? '',
+    serverIp: json['serverIp'] ?? '',
+    clientIp: json['clientIp'] ?? '',
     serverTime: DateTime.parse(json['serverTime']),
   );
+
+  Map<String, dynamic> toJson() => {
+    'databaseProvider': databaseProvider,
+    'databaseConnectionString': databaseConnectionString,
+    'efCoreVersion': efCoreVersion,
+    'aspNetVersion': aspNetVersion,
+    'serverIp': serverIp,
+    'clientIp': clientIp,
+    'serverTime': serverTime,
+  };
 }
 
 class UserAdminDto {
-  final String username;
-  final List<String> roles;
-  final DateTime? lastLogin;
-  final int puzzleCount;
+  String username;
+  List<String> roles;
+  DateTime? lastLogin;
+  int puzzleCount;
 
   UserAdminDto({
     required this.username,
@@ -173,10 +246,17 @@ class UserAdminDto {
   });
 
   factory UserAdminDto.fromJson(Map<String, dynamic> json) => UserAdminDto(
-    username: json['username'],
-    roles: json['roles'],
-    lastLogin: json['lastLogin'],
+    username: json['username'] ?? '',
+    roles: (json['roles'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
+    lastLogin: json['lastLogin'] != null ? DateTime.parse(json['lastLogin']) : null,
     puzzleCount: json['puzzleCount'] ?? 0,
   );
+
+  Map<String, dynamic> toJson() => {
+    'username': username,
+    'roles': roles,
+    'lastLogin': lastLogin,
+    'puzzleCount': puzzleCount,
+  };
 }
 

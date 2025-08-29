@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_2/src/utils/api_endpoints.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../utils/constants.dart';
+import '../dtos/api_dtos.dart';
 import '../services/auth_http_service.dart';
 
 class CreatePage extends StatefulWidget {
-  const CreatePage({Key? key}) : super(key: key);
+  const CreatePage({super.key});
 
   @override
   State<CreatePage> createState() => _CreatePageState();
@@ -18,7 +18,7 @@ class _CreatePageState extends State<CreatePage> {
   bool _loading = true;
   String? _error;
 
-  List<Map<String, dynamic>> _fileGroups = [];
+  List<FileGroupDto>_fileGroups = [];
   String? _selectedGroupName;
   bool _loadingFileGroups = true;
 
@@ -26,7 +26,7 @@ class _CreatePageState extends State<CreatePage> {
   void initState() {
     super.initState();
     _fetchFileGroups();
-    _fetchImages();
+    _fetchImagesDefault();
   }
 
   Future<void> _fetchFileGroups() async {
@@ -37,17 +37,13 @@ class _CreatePageState extends State<CreatePage> {
     try {
       final response = await AuthHttpService.get(Uri.parse(ApiEndpoints.imagesFilegroups));
       if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
+        final List<FileGroupDto> groups = (jsonDecode(response.body) as List)
+            .map((e) => FileGroupDto.fromJson(e as Map<String, dynamic>))
+            .toList();
+
         setState(() {
-          _fileGroups = data
-              .where((e) => e['groupName'] != null && (e['groupName'] as String).isNotEmpty)
-              .map<Map<String, dynamic>>((e) => {
-                    //'groupId': e['groupId'],
-                    'groupName': e['groupName'],
-                    'imageCount': e['imageCount'],
-                  })
-              .toList();
-          _selectedGroupName = _fileGroups.isNotEmpty ? _fileGroups[0]['groupName'] : null;
+          _fileGroups = groups;
+          _selectedGroupName = _fileGroups.isNotEmpty ? _fileGroups[0].groupName : null;
           _loadingFileGroups = false;
         });
       } else {
@@ -66,7 +62,7 @@ class _CreatePageState extends State<CreatePage> {
     }
   }
 
-  Future<void> _fetchImages() async {
+  Future<void> _fetchImagesDefault() async {
     setState(() {
       _loading = true;
       _error = null;
@@ -97,21 +93,49 @@ class _CreatePageState extends State<CreatePage> {
     }
   }
 
+Future<void> _fetchImagesGroup(String? groupName) async {
+  setState(() {
+    _loading = true;
+    _error = null;
+  });
+
+  try {
+    final url = Uri.parse(
+      ApiEndpoints.imagesFilegroup.replaceFirst('{groupName}', groupName ?? ''),
+    );
+    final response = await AuthHttpService.get(url);
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      setState(() {
+        _imageUrls = data.cast<String>();
+        _loading = false;
+      });
+    } else {
+      setState(() {
+        _error = 'Failed to load images: ${response.statusCode}';
+        _loading = false;
+      });
+    }
+  } catch (e) {
+    setState(() {
+      _error = 'Error: $e';
+      _loading = false;
+    });
+  }
+}
   @override
   Widget build(BuildContext context) {
-    // Example: Replace these with your actual user state variables
-    final String userName = 'JohnDoe'; // Get from your user state
-    final String userRole = 'admin';   // Get from your user state
 
-    final TextEditingController _saveToController = TextEditingController();
-    final List<String> _dropdownSamples = [
+    final TextEditingController saveToController = TextEditingController();
+    final List<String> dropdownSamples = [
       'Group A',
       'Group B',
       'Group C',
       'Group D',
       'Group E',
     ];
-    String _selectedDropdown = _dropdownSamples[0];
+    String selectedDropdown = dropdownSamples[0];
 
     return Scaffold(
       appBar: AppBar(
@@ -204,8 +228,8 @@ class _CreatePageState extends State<CreatePage> {
                 SizedBox(
                   width: 120,
                   child: DropdownButton<String>(
-                    value: _selectedDropdown,
-                    items: _dropdownSamples
+                    value: selectedDropdown,
+                    items: dropdownSamples
                         .map((sample) => DropdownMenuItem(
                               value: sample,
                               child: Text(sample),
@@ -213,9 +237,9 @@ class _CreatePageState extends State<CreatePage> {
                         .toList(),
                     onChanged: (value) {
                       setState(() {
-                        if (value != null) _selectedDropdown = value;
+                        if (value != null) selectedDropdown = value;
                       });
-                      debugPrint('Dropdown selected: $_selectedDropdown');
+                      debugPrint('Dropdown selected: $selectedDropdown');
                     },
                   ),
                 ),
@@ -228,14 +252,15 @@ class _CreatePageState extends State<CreatePage> {
                           value: _selectedGroupName,
                           items: _fileGroups
                               .map((group) => DropdownMenuItem<String>(
-                                    value: group['groupName'],
+                                    value: group.groupName,
                                     child: Text(
-                                        '${group['groupName']} (${group['imageCount']})'),
+                                        '${group.groupName} (${group.imageCount})'),
                                   ))
                               .toList(),
                           onChanged: (value) {
                             setState(() {
                               _selectedGroupName = value;
+                              _fetchImagesGroup(_selectedGroupName);
                             });
                           },
                         ),
@@ -243,7 +268,7 @@ class _CreatePageState extends State<CreatePage> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: TextField(
-                    controller: _saveToController,
+                    controller: saveToController,
                     decoration: const InputDecoration(
                       labelText: 'Save To',
                       border: OutlineInputBorder(),
@@ -255,20 +280,18 @@ class _CreatePageState extends State<CreatePage> {
                 ElevatedButton(
                   onPressed: () async {
                     debugPrint(
-                      'SaveTo: ${_saveToController.text}, Dropdown: $_selectedDropdown, Selected: $_selectedIndexes');
+                      'SaveTo: ${saveToController.text}, Dropdown: $selectedDropdown, Selected: $_selectedIndexes');
 
                     // Collect selected image UIDs (assuming _imageUrls contains UIDs or URLs)
                     final selectedUids = _selectedIndexes.map((i) => _imageUrls[i]).toList();
 
                     // Prepare payload matching PuzzleDto and PuzzleImageDto
-                    final payload = {
-                      'name': _saveToController.text,
-                      'images': selectedUids.map((uid) => {'imageUid': uid}).toList(),
-                      // 'creationTime' and 'id' are typically set by the backend
-                    };
-
+                    final puzzleDto = PuzzleDtoBase(
+                    name: saveToController.text,
+                    images: selectedUids.map((uid) => PuzzleImageDto(imageUid: uid)).toList(),
+                  );
                     // Call the new endpoint (POST recommended for creating new resources)
-                    final response = await AuthHttpService.post(Uri.parse(ApiEndpoints.puzzlesCreate), payload);
+                    final response = await AuthHttpService.post(Uri.parse(ApiEndpoints.puzzlesCreate), puzzleDto.toJson());
 
                     if (response.statusCode == 200 || response.statusCode == 201) {
                       ScaffoldMessenger.of(context).showSnackBar(

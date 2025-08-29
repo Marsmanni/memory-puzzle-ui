@@ -6,7 +6,6 @@ import 'package:file_picker/file_picker.dart';
 import 'dart:async';
 import 'dart:ui' as ui;
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import '../models/image_transform_model.dart';
 import '../services/image_service.dart';
 import '../services/image_crop_service.dart';
@@ -17,6 +16,8 @@ import '../utils/log.dart';
 import '../dtos/api_dtos.dart';
 import '../utils/api_endpoints.dart';
 import '../services/auth_http_service.dart';
+import '../utils/image_cropper_key_handler.dart';
+import '../widgets/image_cropper_help_overlay.dart';
 
 /// Main page for image cropping functionality
 class ImageCropperPage extends StatefulWidget {
@@ -112,40 +113,41 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
     }
   }
 
-// Helper function to convert Uint8List to ui.Image
-Future<ui.Image> uint8ListToUiImage(Uint8List bytes) async {
-  final completer = Completer<ui.Image>();
-  ui.decodeImageFromList(bytes, (ui.Image img) {
-    completer.complete(img);
-  });
-  return completer.future;
-}
-  Future<void> pickImageWeb() async {
-  try {
-    final result = await FilePicker.platform.pickFiles(type: FileType.image);
-    if (result != null && result.files.isNotEmpty) {
-      final bytes = result.files.first.bytes;
-      if (bytes != null) {
-
-        final image = await uint8ListToUiImage(bytes);
-
-        setState(() {
-          Log.d('SetState2 (Web)');
-          _transformModel = _transformModel.copyWith(
-            originalImage: image,
-            isImageLoaded: true,
-            imagePosition: Offset.zero,
-            imageScale: 1.0, // Temporary, will be updated
-            imageRotation: 0.0,
-          );
-        });
-        _setInitialScaleAfterLayout();
-      }
-    }
-  } catch (e) {
-    _showErrorMessage('Failed to pick image (web): $e');
+  // Helper function to convert Uint8List to ui.Image
+  Future<ui.Image> uint8ListToUiImage(Uint8List bytes) async {
+    final completer = Completer<ui.Image>();
+    ui.decodeImageFromList(bytes, (ui.Image img) {
+      completer.complete(img);
+    });
+    return completer.future;
   }
-}
+
+  Future<void> pickImageWeb() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(type: FileType.image);
+      if (result != null && result.files.isNotEmpty) {
+        final bytes = result.files.first.bytes;
+        if (bytes != null) {
+          final image = await uint8ListToUiImage(bytes);
+
+          setState(() {
+            Log.d('SetState2 (Web)');
+            _transformModel = _transformModel.copyWith(
+              originalImage: image,
+              isImageLoaded: true,
+              imagePosition: Offset.zero,
+              imageScale: 1.0, // Temporary, will be updated
+              imageRotation: 0.0,
+            );
+          });
+          _setInitialScaleAfterLayout();
+        }
+      }
+    } catch (e) {
+      _showErrorMessage('Failed to pick image (web): $e');
+    }
+  }
+
   /// Handle scale start gesture
   void _onScaleStart(ScaleStartDetails details) {
     _transformModel.updateGestureState(
@@ -286,251 +288,14 @@ Future<ui.Image> uint8ListToUiImage(Uint8List bytes) async {
 
   /// Enhanced keyboard events with modifier keys
   void _onKeyEvent(KeyEvent event) {
-    if (event is KeyDownEvent) {
-      setState(() {
-        bool isCtrlPressed = HardwareKeyboard.instance.isControlPressed;
-        bool isShiftPressed = HardwareKeyboard.instance.isShiftPressed;
-
-        // Calculate step sizes based on modifiers
-        double moveStep = isCtrlPressed ? 1.0 : (isShiftPressed ? 50.0 : 10.0);
-        double scaleStep = isCtrlPressed ? 0.02 : (isShiftPressed ? 0.2 : 0.1);
-        double rotationStep = isCtrlPressed
-            ? 0.02
-            : (isShiftPressed ? 0.5 : 0.1);
-
-        switch (event.logicalKey) {
-          // Zoom controls
-          case LogicalKeyboardKey.keyQ: // Scale down
-            double scaleFactor = 1.0 - scaleStep;
-            double newScale = (_transformModel.imageScale * scaleFactor).clamp(
-              0.1,
-              5.0,
-            );
-            Log.d(
-              'Key Q (${isCtrlPressed
-                  ? 'precise'
-                  : isShiftPressed
-                  ? 'fast'
-                  : 'normal'}) - Scale: $newScale',
-            );
-            _transformModel.updateTransformations(
-              position: _transformModel.imagePosition,
-              scale: newScale,
-              rotation: _transformModel.imageRotation,
-            );
-            break;
-
-          case LogicalKeyboardKey.keyE: // Scale up
-            double scaleFactor = 1.0 + scaleStep;
-            double newScale = (_transformModel.imageScale * scaleFactor).clamp(
-              0.1,
-              5.0,
-            );
-            Log.d(
-              'Key E (${isCtrlPressed
-                  ? 'precise'
-                  : isShiftPressed
-                  ? 'fast'
-                  : 'normal'}) - Scale: $newScale',
-            );
-            _transformModel.updateTransformations(
-              position: _transformModel.imagePosition,
-              scale: newScale,
-              rotation: _transformModel.imageRotation,
-            );
-            break;
-
-          // Movement controls - Arrow Keys
-          case LogicalKeyboardKey.arrowUp:
-            Offset newPosition =
-                _transformModel.imagePosition + Offset(0, -moveStep);
-            Log.d(
-              'Arrow Up (${isCtrlPressed
-                  ? 'precise'
-                  : isShiftPressed
-                  ? 'fast'
-                  : 'normal'}) - Move: $newPosition',
-            );
-            _transformModel.updateTransformations(
-              position: newPosition,
-              scale: _transformModel.imageScale,
-              rotation: _transformModel.imageRotation,
-            );
-            break;
-
-          case LogicalKeyboardKey.arrowDown:
-            Offset newPosition =
-                _transformModel.imagePosition + Offset(0, moveStep);
-            Log.d(
-              'Arrow Down (${isCtrlPressed
-                  ? 'precise'
-                  : isShiftPressed
-                  ? 'fast'
-                  : 'normal'}) - Move: $newPosition',
-            );
-            _transformModel.updateTransformations(
-              position: newPosition,
-              scale: _transformModel.imageScale,
-              rotation: _transformModel.imageRotation,
-            );
-            break;
-
-          case LogicalKeyboardKey.arrowLeft:
-            if (isCtrlPressed || isShiftPressed) {
-              // Ctrl/Shift + Left Arrow = Rotate left
-              double newRotation = _transformModel.imageRotation - rotationStep;
-              Log.d('Ctrl/Shift+Left - Rotate: $newRotation');
-              _transformModel.updateTransformations(
-                position: _transformModel.imagePosition,
-                scale: _transformModel.imageScale,
-                rotation: newRotation,
-              );
-            } else {
-              // Normal Left Arrow = Move left
-              Offset newPosition =
-                  _transformModel.imagePosition + Offset(-moveStep, 0);
-              Log.d('Arrow Left - Move: $newPosition');
-              _transformModel.updateTransformations(
-                position: newPosition,
-                scale: _transformModel.imageScale,
-                rotation: _transformModel.imageRotation,
-              );
-            }
-            break;
-
-          case LogicalKeyboardKey.arrowRight:
-            if (isCtrlPressed || isShiftPressed) {
-              // Ctrl/Shift + Right Arrow = Rotate right
-              double newRotation = _transformModel.imageRotation + rotationStep;
-              Log.d('Ctrl/Shift+Right - Rotate: $newRotation');
-              _transformModel.updateTransformations(
-                position: _transformModel.imagePosition,
-                scale: _transformModel.imageScale,
-                rotation: newRotation,
-              );
-            } else {
-              // Normal Right Arrow = Move right
-              Offset newPosition =
-                  _transformModel.imagePosition + Offset(moveStep, 0);
-              Log.d('Arrow Right - Move: $newPosition');
-              _transformModel.updateTransformations(
-                position: newPosition,
-                scale: _transformModel.imageScale,
-                rotation: _transformModel.imageRotation,
-              );
-            }
-            break;
-
-          // WASD controls
-          case LogicalKeyboardKey.keyW:
-            Offset newPosition =
-                _transformModel.imagePosition + Offset(0, -moveStep);
-            Log.d(
-              'W (${isCtrlPressed
-                  ? 'precise'
-                  : isShiftPressed
-                  ? 'fast'
-                  : 'normal'}) - Move up: $newPosition',
-            );
-            _transformModel.updateTransformations(
-              position: newPosition,
-              scale: _transformModel.imageScale,
-              rotation: _transformModel.imageRotation,
-            );
-            break;
-
-          case LogicalKeyboardKey.keyS:
-            Offset newPosition =
-                _transformModel.imagePosition + Offset(0, moveStep);
-            Log.d(
-              'S (${isCtrlPressed
-                  ? 'precise'
-                  : isShiftPressed
-                  ? 'fast'
-                  : 'normal'}) - Move down: $newPosition',
-            );
-            _transformModel.updateTransformations(
-              position: newPosition,
-              scale: _transformModel.imageScale,
-              rotation: _transformModel.imageRotation,
-            );
-            break;
-
-          case LogicalKeyboardKey.keyA:
-            Offset newPosition =
-                _transformModel.imagePosition + Offset(-moveStep, 0);
-            Log.d(
-              'A (${isCtrlPressed
-                  ? 'precise'
-                  : isShiftPressed
-                  ? 'fast'
-                  : 'normal'}) - Move left: $newPosition',
-            );
-            _transformModel.updateTransformations(
-              position: newPosition,
-              scale: _transformModel.imageScale,
-              rotation: _transformModel.imageRotation,
-            );
-            break;
-
-          case LogicalKeyboardKey.keyD:
-            Offset newPosition =
-                _transformModel.imagePosition + Offset(moveStep, 0);
-            Log.d(
-              'D (${isCtrlPressed
-                  ? 'precise'
-                  : isShiftPressed
-                  ? 'fast'
-                  : 'normal'}) - Move right: $newPosition',
-            );
-            _transformModel.updateTransformations(
-              position: newPosition,
-              scale: _transformModel.imageScale,
-              rotation: _transformModel.imageRotation,
-            );
-            break;
-
-          // Rotation controls
-          case LogicalKeyboardKey.keyZ:
-            double newRotation = _transformModel.imageRotation - rotationStep;
-            Log.d(
-              'Z (${isCtrlPressed
-                  ? 'precise'
-                  : isShiftPressed
-                  ? 'fast'
-                  : 'normal'}) - Rotate left: $newRotation',
-            );
-            _transformModel.updateTransformations(
-              position: _transformModel.imagePosition,
-              scale: _transformModel.imageScale,
-              rotation: newRotation,
-            );
-            break;
-
-          case LogicalKeyboardKey.keyX:
-            double newRotation = _transformModel.imageRotation + rotationStep;
-            Log.d(
-              'X (${isCtrlPressed
-                  ? 'precise'
-                  : isShiftPressed
-                  ? 'fast'
-                  : 'normal'}) - Rotate right: $newRotation',
-            );
-            _transformModel.updateTransformations(
-              position: _transformModel.imagePosition,
-              scale: _transformModel.imageScale,
-              rotation: newRotation,
-            );
-            break;
-
-          // Reset
-          case LogicalKeyboardKey.keyR:
-            Log.d('R - Reset transformations');
-            _transformModel.resetTransformations();
-            break;
-        }
-      });
-    }
+    setState(() {
+      handleImageCropperKeyEvent(
+        event: event,
+        transformModel: _transformModel,
+        updateModel: (model) => _transformModel = model,
+        resetTransformations: () => _transformModel.resetTransformations(),
+      );
+    });
   }
 
   /// Handle scale update gesture
@@ -699,14 +464,18 @@ Future<ui.Image> uint8ListToUiImage(Uint8List bytes) async {
       _loadingFilegroups = true;
     });
     try {
-      final response = await AuthHttpService.get(Uri.parse(ApiEndpoints.imagesFilegroups));
+      final response = await AuthHttpService.get(
+        Uri.parse(ApiEndpoints.imagesFilegroups),
+      );
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {
           _filegroups = data
               .map<FileGroupDto>((e) => FileGroupDto.fromJson(e))
               .toList();
-          _selectedFilegroupName = _filegroups.isNotEmpty ? _filegroups[0].groupName : "";
+          _selectedFilegroupName = _filegroups.isNotEmpty
+              ? _filegroups[0].groupName
+              : "";
           _loadingFilegroups = false;
         });
       } else {
@@ -734,7 +503,10 @@ Future<ui.Image> uint8ListToUiImage(Uint8List bytes) async {
             const Text('Image Cropper'),
             const SizedBox(width: 16),
             // Label for filegroup selector
-            const Text('Filegroup:', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text(
+              'Filegroup:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(width: 8),
             // Filegroup selector
             SizedBox(
@@ -745,10 +517,12 @@ Future<ui.Image> uint8ListToUiImage(Uint8List bytes) async {
                       value: _selectedFilegroupName,
                       isExpanded: true,
                       items: _filegroups
-                          .map((fg) => DropdownMenuItem(
-                                value: fg.groupName,
-                                child: Text('${fg.groupName} (${fg.imageCount})'),
-                              ))
+                          .map(
+                            (fg) => DropdownMenuItem(
+                              value: fg.groupName,
+                              child: Text('${fg.groupName} (${fg.imageCount})'),
+                            ),
+                          )
                           .toList(),
                       onChanged: (value) {
                         if (value != null) {
@@ -768,7 +542,10 @@ Future<ui.Image> uint8ListToUiImage(Uint8List bytes) async {
                 decoration: const InputDecoration(
                   labelText: 'New filegroup',
                   hintText: 'Add filegroup',
-                  contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 8),
+                  contentPadding: EdgeInsets.symmetric(
+                    vertical: 0,
+                    horizontal: 8,
+                  ),
                 ),
                 onSubmitted: (value) {
                   if (value.isNotEmpty &&
@@ -838,141 +615,15 @@ Future<ui.Image> uint8ListToUiImage(Uint8List bytes) async {
                         ),
                       ),
 
-                      // Help overlay and info panel
-                      Positioned(
-                        top: 10,
-                        left: 10,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.black87,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Text(
-                                'ENHANCED CONTROLS:\n'
-                                '🖱️ Mouse:\n'
-                                '  • Scroll = Zoom\n'
-                                '  • Shift+Scroll = Rotate\n'
-                                '  • Ctrl+Scroll = Precise Zoom\n'
-                                '  • Ctrl+Shift+Scroll = Precise Rotate\n'
-                                '  • Drag = Move\n'
-                                '  • Ctrl+Drag = Zoom\n'
-                                '  • Ctrl+Shift+Drag = Rotate\n'
-                                '⌨️ Keyboard:\n'
-                                '  • Arrow/WASD = Move\n'
-                                '  • Ctrl+Arrow/WASD = Precise Move\n'
-                                '  • Shift+Arrow/WASD = Fast Move\n'
-                                '  • Ctrl+Left/Right = Precise Rotate\n'
-                                '  • Q/E = Zoom\n'
-                                '  • Z/X = Rotate\n'
-                                '  • R = Reset',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  height: 1.2,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.white70,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Current scale: ${_transformModel.imageScale.toStringAsFixed(2)}',
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                  Text(
-                                    'Current offset: (${_transformModel.imagePosition.dx.toStringAsFixed(1)}, ${_transformModel.imagePosition.dy.toStringAsFixed(1)})',
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                  if (_transformModel.originalImage != null)
-                                    Text(
-                                      'Image size: ${_transformModel.originalImage!.width} x ${_transformModel.originalImage!.height}',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
+                      // Help overlay
+                      ImageCropperHelpOverlay(
+                        transformModel: _transformModel,
+                        croppedImageBytes: _croppedImageBytes,
                       ),
-
-                      // Show cropped image below help panel
-                      if (_croppedImageBytes != null)
-                        Positioned(
-                          top:
-                              350, // Adjust as needed to appear below the help panel
-                          left: 10,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.black, width: 2),
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                            child: Image.memory(
-                              _croppedImageBytes!,
-                              width: 200, // Adjust size as needed
-                              height: 200,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
                     ],
                   ),
                 ),
               ),
-            ),
-          ),
-
-          // Action buttons
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    ElevatedButton(
-                      onPressed: _pickImage,
-                      child: const Text('Select Photo'),
-                    ),
-                    ElevatedButton(
-                      onPressed: pickImageWeb,
-                      child: const Text('Select Photo Web'),
-                    ),
-                    ElevatedButton(
-                      onPressed: _cropAndSaveImage,
-                      child: const Text('Cut & Save'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                ElevatedButton(
-                  onPressed: _testSaveImageInFourParts,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('Test - Save in 4 Parts'),
-                ),
-              ],
             ),
           ),
         ],

@@ -11,6 +11,7 @@ class ApiEndpoints {
   static final String adminInfo = '${AppConstants.apiBaseUrl}/api/v1/admin/info';
   static final String adminAllUsers = '${AppConstants.apiBaseUrl}/api/v1/admin/users';
   static final String adminAllPuzzles = '${AppConstants.apiBaseUrl}/api/v1/admin/puzzles';
+  static final String adminUpdatePuzzle = '${AppConstants.apiBaseUrl}/api/v1/admin/updatepuzzle';
   static final String puzzlesGetAll = '${AppConstants.apiBaseUrl}/api/v1/puzzles';
   static final String puzzlesGetById = '${AppConstants.apiBaseUrl}/api/v1/puzzles/{id}';
   static final String puzzlesCreate = '${AppConstants.apiBaseUrl}/api/v1/puzzles';
@@ -18,16 +19,15 @@ class ApiEndpoints {
   static final String puzzlesLogPuzzle = '${AppConstants.apiBaseUrl}/api/v1/puzzles/{puzzleId}/log';
   static final String puzzlesDefault = '${AppConstants.apiBaseUrl}/api/v1/puzzles/default';
   static final String puzzlesDefaults = '${AppConstants.apiBaseUrl}/api/v1/puzzles/defaults';
-  static final String puzzlesFileGroups = '${AppConstants.apiBaseUrl}/api/v1/puzzles/filegroups';
   static final String imagesGetAll = '${AppConstants.apiBaseUrl}/api/v1/images';
   static final String imagesGetById = '${AppConstants.apiBaseUrl}/api/v1/images/{id}';
   static final String imagesUpload = '${AppConstants.apiBaseUrl}/api/v1/images/upload';
   static final String imagesDelete = '${AppConstants.apiBaseUrl}/api/v1/images/{id}';
   static final String imagesUpdate = '${AppConstants.apiBaseUrl}/api/v1/images/{id}';
-  static final String imagesGetByPuzzleId = '${AppConstants.apiBaseUrl}/api/v1/images/puzzle/{puzzleId}';
   static final String imagesAzureBlobs = '${AppConstants.apiBaseUrl}/api/v1/images/azureblobs';
   static final String imagesTestGroup = '${AppConstants.apiBaseUrl}/api/v1/images/group/test';
   static final String imagesFilegroups = '${AppConstants.apiBaseUrl}/api/v1/images/filegroups';
+  static final String imagesFilegroup = '${AppConstants.apiBaseUrl}/api/v1/images/filegroup/{groupName}';
   static final String usersGetAll = '${AppConstants.apiBaseUrl}/api/v1/users';
   static final String usersGetById = '${AppConstants.apiBaseUrl}/api/v1/users/{id}';
   static final String usersCreate = '${AppConstants.apiBaseUrl}/api/v1/users';

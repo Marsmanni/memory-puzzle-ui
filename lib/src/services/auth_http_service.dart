@@ -29,5 +29,18 @@ class AuthHttpService {
     );
   }
 
-   /// You can add similar methods for PUT, DELETE if needed.
+   static Future<http.Response> put(Uri url, Object payload) async {
+    final prefs = await SharedPreferences.getInstance();
+    final jwt = prefs.getString('jwt');
+    return await http.put(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+         if (jwt != null) 'Authorization': 'Bearer $jwt',
+      },
+      body: jsonEncode(payload),
+    );
+  }
+
+  /// You can add similar methods for DELETE if needed.
 }

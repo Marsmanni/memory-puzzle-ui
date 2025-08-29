@@ -44,22 +44,8 @@ class _UsersPageState extends State<UsersPage> {
         final List<dynamic> usersData = jsonDecode(usersResponse.body);
 
         setState(() {
-          _puzzles = puzzlesData.map<PuzzleAdminDto>((e) => PuzzleAdminDto(
-            id: e['id'],
-            name: e['name'],
-            creator: e['creator'],
-            creationTime: DateTime.parse(e['creationTime']),
-            imageCount: e['imageCount'] ?? 0,
-            isPublic: e['isPublic'] ?? false,
-          )).toList();
-
-          _users = usersData.map<UserAdminDto>((e) => UserAdminDto(
-            username: e['username'],
-            roles: List<String>.from(e['roles'] ?? []),
-            lastLogin: e['lastLogin'] != null ? DateTime.parse(e['lastLogin']) : null,
-            puzzleCount: e['puzzleCount'] ?? 0,
-          )).toList();
-
+          _puzzles = puzzlesData.map((e) => PuzzleAdminDto.fromJson(e)).toList();
+          _users = usersData.map((e) => UserAdminDto.fromJson(e)).toList();
           _loading = false;
         });
       } else {
@@ -121,7 +107,45 @@ class _UsersPageState extends State<UsersPage> {
                                 children: _puzzles.map((puzzle) => Card(
                                   child: ListTile(
                                     title: Text(puzzle.name),
-                                    subtitle: Text('Autor: ${puzzle.creator}\nBilder: ${puzzle.imageCount}\nÖffentlich: ${puzzle.isPublic ? "Ja" : "Nein"}'),
+                                    subtitle: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text('Autor: ${puzzle.creator}'),
+                                        Text('Bilder: ${puzzle.imageCount}'),
+                                        Row(
+                                          children: [
+                                            const Text('Öffentlich: '),
+                                            Checkbox(
+                                              value: puzzle.isPublic,
+                                              onChanged: (value) async {
+                                                // Optimistically update UI
+                                                setState(() {
+                                                  puzzle.isPublic = value ?? false;
+                                                });
+                                                // Call PUT endpoint
+                                                final payload = {
+                                                  'isPublic': value,
+                                                };
+
+                                                final response = await AuthHttpService.put(
+                                                  Uri.parse('${ApiEndpoints.adminUpdatePuzzle}/${puzzle.id}'),
+                                                  payload,
+                                                );
+                                                if (response.statusCode != 204) {
+                                                  // Revert UI if failed
+                                                  setState(() {
+                                                    puzzle.isPublic = !puzzle.isPublic;
+                                                  });
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(content: Text('Fehler beim Aktualisieren!')),
+                                                  );
+                                                }
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
                                     trailing: Text('ID: ${puzzle.id}\n${puzzle.creationTime.toLocal()}'),
                                   ),
                                 )).toList(),
