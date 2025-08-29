@@ -82,6 +82,7 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
   }
 
   /// Pick an image from gallery
+  // ignore: unused_element
   Future<void> _pickImage() async {
     try {
       final imageFile = await ImageService.pickImageFromGallery();
@@ -400,6 +401,7 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
   }
 
   /// Test function to save image in four parts
+  // ignore: unused_element
   Future<void> _testSaveImageInFourParts() async {
     if (!_transformModel.isImageLoaded ||
         _transformModel.originalImage == null) {

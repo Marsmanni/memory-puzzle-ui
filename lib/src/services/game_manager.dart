@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_2/src/dtos/api_dtos.dart';
+import '../dtos/api_dtos.dart';
 import 'dart:math';
 
 class GameManager extends ChangeNotifier {
@@ -93,5 +93,9 @@ class GameManager extends ChangeNotifier {
     _matches = List<int>.filled(count, 0);
     _currentPlayer = 0;
     notifyListeners();
+  }
+
+  bool isCardDisabled(int index) {
+    return isProcessingMove || flipped[index] || matchedIndexes.contains(index);
   }
 }

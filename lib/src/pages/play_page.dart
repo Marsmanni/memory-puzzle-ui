@@ -6,6 +6,8 @@ import '../services/game_manager.dart';
 import '../utils/constants.dart';
 import '../utils/api_endpoints.dart';
 import 'puzzle_card.dart';
+import '../widgets/play_settings_menu.dart';
+import '../utils/app_localizations.dart';
 
 class PlayPage extends StatefulWidget {
   const PlayPage({super.key});
@@ -17,10 +19,10 @@ class PlayPage extends StatefulWidget {
 class _PlayPageState extends State<PlayPage> {
   final ApiService _apiService = ApiService();
   final List<Map<String, String>> _placeholders = [
-    {'name': 'Himmel', 'asset': 'assets/placeholder1.png'},
-    {'name': 'Puzzle', 'asset': 'assets/placeholder2.png'},
-    {'name': 'Wiese', 'asset': 'assets/placeholder3.png'},
-    {'name': 'Smiley', 'asset': 'assets/placeholder0.png'},
+    {'key': 'placeholder_himmel', 'asset': 'assets/placeholder1.png'},
+    {'key': 'placeholder_puzzle', 'asset': 'assets/placeholder2.png'},
+    {'key': 'placeholder_wiese', 'asset': 'assets/placeholder3.png'},
+    {'key': 'placeholder_smiley', 'asset': 'assets/placeholder0.png'},
   ];
   int _selectedPlaceholderIndex = 0;
   List<PuzzleDto> _groups = [];
@@ -137,22 +139,18 @@ class _PlayPageState extends State<PlayPage> {
                 ),
               )),
               const SizedBox(width: 16),
-              PopupMenuButton<int>(
-                icon: const Icon(Icons.settings),
-                tooltip: 'Settings',
-                itemBuilder: (context) => [
-                  const PopupMenuItem<int>(
-                    enabled: false,
-                    child: Text('Select Placeholder'),
-                  ),
-                  ...List.generate(_placeholders.length, (i) => PopupMenuItem<int>(
-                    value: i,
-                    child: Text(_placeholders[i]['name']!),
-                  )),
-                ],
-                onSelected: (value) {
+              PlaySettingsMenu(
+                selectedPlaceholderIndex: _selectedPlaceholderIndex,
+                placeholders: _placeholders,
+                onPlaceholderChanged: (index) {
                   setState(() {
-                    _selectedPlaceholderIndex = value;
+                    _selectedPlaceholderIndex = index;
+                  });
+                },
+                languageCode: AppLocalizations.languageCode,
+                onLanguageChanged: (code) {
+                  setState(() {
+                    AppLocalizations.setLanguage(code);
                   });
                 },
               ),
@@ -183,7 +181,7 @@ class _PlayPageState extends State<PlayPage> {
                       imgUrl: imgUrl,
                       isMatched: gameManager.matchedIndexes.contains(index),
                       isFlipped: gameManager.flipped[index],
-                      isDisabled: gameManager.isProcessingMove || gameManager.flipped[index] || gameManager.matchedIndexes.contains(index),
+                      isDisabled: gameManager.isCardDisabled(index),
                       onTap: () => gameManager.onCardTap(index),
                       placeholderAsset: _placeholders[_selectedPlaceholderIndex]['asset']!,
                     );

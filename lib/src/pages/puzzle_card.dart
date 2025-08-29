@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 class PuzzleCard extends StatelessWidget {
@@ -17,8 +15,8 @@ class PuzzleCard extends StatelessWidget {
     required this.isDisabled,
     required this.onTap,
     required this.placeholderAsset,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../main.dart'; // For AuthInfo
+import '../utils/app_localizations.dart';
 
 class AppBarActions extends StatelessWidget {
   final AuthInfo auth;
@@ -25,7 +26,7 @@ class AppBarActions extends StatelessWidget {
       return Builder(
         builder: (context) => IconButton(
           icon: const Icon(Icons.login),
-          tooltip: 'Login',
+          tooltip: AppLocalizations.get('login'),
           onPressed: () => showLoginDialog(context),
         ),
       );
@@ -45,47 +46,47 @@ class AppBarActions extends StatelessWidget {
             PopupMenuButton<String>(
               icon: const CircleAvatar(child: Icon(Icons.person)),
               itemBuilder: (context) => [
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'logout',
-                  child: Text('Logout'),
+                  child: Text(AppLocalizations.get('logout')),
                 ),
                 const PopupMenuDivider(),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'play',
                   child: ListTile(
-                    leading: Icon(Icons.play_arrow),
-                    title: Text('Play'),
+                    leading: const Icon(Icons.play_arrow),
+                    title: Text(AppLocalizations.get('play')),
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'crop',
                   child: ListTile(
-                    leading: Icon(Icons.crop),
-                    title: Text('Crop'),
+                    leading: const Icon(Icons.crop),
+                    title: Text(AppLocalizations.get('crop')),
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'create',
                   child: ListTile(
-                    leading: Icon(Icons.create),
-                    title: Text('Create'),
+                    leading: const Icon(Icons.create),
+                    title: Text(AppLocalizations.get('create')),
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'users',
                   child: ListTile(
-                    leading: Icon(Icons.people),
-                    title: Text('Users'),
+                    leading: const Icon(Icons.people),
+                    title: Text(AppLocalizations.get('users')),
                   ),
                 ),
                 if (auth.role == 'admin')
                   const PopupMenuDivider(),
                 if (auth.role == 'admin')
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'systemInfo',
                     child: ListTile(
-                      leading: Icon(Icons.info),
-                      title: Text('System Info'),
+                      leading: const Icon(Icons.info),
+                      title: Text(AppLocalizations.get('systemInfo')),
                     ),
                   ),
               ],
