@@ -81,23 +81,23 @@ class AppLocalizations {
       'cropperPage.uploadFailed': 'Upload: Fehlgeschlagen',
 
       'cropperPage.helpText': '''
-ENHANCED CONTROLS:
-🖱️ Mouse:
-  • Scroll = Zoom
-  • Shift+Scroll = Rotate
-  • Ctrl+Scroll = Precise Zoom
-  • Ctrl+Shift+Scroll = Precise Rotate
-  • Drag = Move
-  • Ctrl+Drag = Zoom
-  • Ctrl+Shift+Drag = Rotate
-⌨️ Keyboard:
-  • Arrow/WASD = Move
-  • Ctrl+Arrow/WASD = Precise Move
-  • Shift+Arrow/WASD = Fast Move
-  • Ctrl+Left/Right = Precise Rotate
+ERWEITERTE STEUERUNG:
+🖱️ Maus:
+  • Scrollen = Zoom
+  • Shift+Scrollen = Drehen
+  • Strg+Scrollen = Präziser Zoom
+  • Strg+Shift+Scrollen = Präzises Drehen
+  • Ziehen = Bewegen
+  • Strg+Ziehen = Zoom
+  • Strg+Shift+Ziehen = Drehen
+⌨️ Tastatur:
+  • Pfeiltasten/WASD = Bewegen
+  • Strg+Pfeiltasten/WASD = Präzises Bewegen
+  • Shift+Pfeiltasten/WASD = Schnelles Bewegen
+  • Strg+Links/Rechts = Präzises Drehen
   • Q/E = Zoom
-  • Z/X = Rotate
-  • R = Reset
+  • Z/X = Drehen
+  • R = Zurücksetzen
 ''',
     },
     'en': {

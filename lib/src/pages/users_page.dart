@@ -118,8 +118,14 @@ class _UsersPageState extends State<UsersPage> {
               ),
             ),
             const SizedBox(width: 32),
-            // User List
-            UserListSection(users: _users, loading: _loading, error: _error),
+            // User List (middle column)
+            Expanded(
+              child: UserListSection(
+                users: _users,
+                loading: _loading,
+                error: _error,
+              ),
+            ),
             const SizedBox(width: 32),
             // Table View (third column)
             Expanded(
