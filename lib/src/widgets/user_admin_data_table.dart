@@ -24,16 +24,16 @@ class UserAdminDataTable extends StatelessWidget {
         sortAscending: sortAscending,
         columns: [
           DataColumn(
-            label: Text(AppLocalizations.get('username')),
+            label: Text(AppLocalizations.get('userAdminCard.username')),
             onSort: onSort,
           ),
           DataColumn(
-            label: Text(AppLocalizations.get('puzzles')),
+            label: Text(AppLocalizations.get('userAdminCard.puzzles')),
             numeric: true,
             onSort: onSort,
           ),
           DataColumn(
-            label: Text(AppLocalizations.get('lastLogin')),
+            label: Text(AppLocalizations.get('userAdminCard.lastLogin')),
             onSort: onSort,
           ),
         ],
@@ -43,7 +43,7 @@ class UserAdminDataTable extends StatelessWidget {
             DataCell(Text(user.puzzleCount.toString())),
             DataCell(Text(user.lastLogin != null
                 ? user.lastLogin.toString()
-                : AppLocalizations.get('neverLoggedIn'))),
+                : AppLocalizations.get('userAdminCard.neverLoggedIn'))),
           ],
         )).toList(),
       ),

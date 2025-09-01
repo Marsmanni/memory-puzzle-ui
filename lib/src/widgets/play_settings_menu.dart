@@ -21,38 +21,46 @@ class PlaySettingsMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     return PopupMenuButton<String>(
       icon: const Icon(Icons.settings),
-      tooltip: AppLocalizations.get('settings'),
+      tooltip: AppLocalizations.get('playPage.settings'),
       itemBuilder: (context) => [
         PopupMenuItem<String>(
           enabled: false,
-          child: Text(AppLocalizations.get('selectPlaceholder')),
+          child: Text(AppLocalizations.get('playPage.selectPlaceholder')),
         ),
         ...List.generate(placeholders.length, (i) => PopupMenuItem<String>(
           value: 'placeholder_$i',
-          child: Text(AppLocalizations.get(placeholders[i]['key']!)),
+          child: Text(AppLocalizations.get('playPage.${placeholders[i]['key']}')),
         )),
         const PopupMenuDivider(),
         PopupMenuItem<String>(
           enabled: false,
-          child: Text(AppLocalizations.get('language')),
+          child: Text(AppLocalizations.get('playPage.language')),
         ),
         PopupMenuItem<String>(
           value: 'lang_de',
           child: Row(
-            children: const [
-              Text('🇩🇪 '),
-              SizedBox(width: 8),
-              Text('Deutsch'),
+            children: [
+              const Text('🇩🇪 '),
+              const SizedBox(width: 8),
+              const Text('Deutsch'),
+              if (languageCode == 'de') ...[
+                const SizedBox(width: 8),
+                const Icon(Icons.check, color: Colors.green, size: 18),
+              ],
             ],
           ),
         ),
         PopupMenuItem<String>(
           value: 'lang_en',
           child: Row(
-            children: const [
-              Text('🇬🇧 '),
-              SizedBox(width: 8),
-              Text('English'),
+            children: [
+              const Text('🇬🇧 '),
+              const SizedBox(width: 8),
+              const Text('English'),
+              if (languageCode == 'en') ...[
+                const SizedBox(width: 8),
+                const Icon(Icons.check, color: Colors.green, size: 18),
+              ],
             ],
           ),
         ),

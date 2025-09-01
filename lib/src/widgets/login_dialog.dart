@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../utils/app_localizations.dart';
+
 // Helper to decode JWT and extract claims
 Map<String, dynamic> parseJwt(String token) {
   final parts = token.split('.');
@@ -71,13 +73,13 @@ class _LoginDialogState extends State<LoginDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Login'),
+      title: Text(AppLocalizations.get('login')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           TextField(
             controller: _usernameController,
-            decoration: const InputDecoration(labelText: 'Username'),
+            decoration: InputDecoration(labelText: AppLocalizations.get('username')),
           ),
           TextField(
             controller: _passwordController,
@@ -98,7 +100,7 @@ class _LoginDialogState extends State<LoginDialog> {
         ),
         ElevatedButton(
           onPressed: _loading ? null : _login,
-          child: _loading ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Login'),
+          child: _loading ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : Text(AppLocalizations.get('login')),
         ),
       ],
     );

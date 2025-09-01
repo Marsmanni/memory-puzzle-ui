@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import '../models/image_transform_model.dart';
+import '../utils/app_localizations.dart';
 
 class ImageCropperHelpOverlay extends StatelessWidget {
   final ImageTransformModel transformModel;
@@ -25,25 +26,9 @@ class ImageCropperHelpOverlay extends StatelessWidget {
               color: Colors.black87,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Text(
-              'ENHANCED CONTROLS:\n'
-              '🖱️ Mouse:\n'
-              '  • Scroll = Zoom\n'
-              '  • Shift+Scroll = Rotate\n'
-              '  • Ctrl+Scroll = Precise Zoom\n'
-              '  • Ctrl+Shift+Scroll = Precise Rotate\n'
-              '  • Drag = Move\n'
-              '  • Ctrl+Drag = Zoom\n'
-              '  • Ctrl+Shift+Drag = Rotate\n'
-              '⌨️ Keyboard:\n'
-              '  • Arrow/WASD = Move\n'
-              '  • Ctrl+Arrow/WASD = Precise Move\n'
-              '  • Shift+Arrow/WASD = Fast Move\n'
-              '  • Ctrl+Left/Right = Precise Rotate\n'
-              '  • Q/E = Zoom\n'
-              '  • Z/X = Rotate\n'
-              '  • R = Reset',
-              style: TextStyle(
+            child: Text(
+              AppLocalizations.get('cropperPage.helpText'),
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 10,
                 height: 1.2,
@@ -61,14 +46,23 @@ class ImageCropperHelpOverlay extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Current scale: ${transformModel.imageScale.toStringAsFixed(2)}',
+                  AppLocalizations.format(
+                    'cropperPage.currentScale',
+                    {'scale': transformModel.imageScale.toStringAsFixed(2)},
+                  ),
                   style: const TextStyle(
                     fontSize: 12,
                     color: Colors.black,
                   ),
                 ),
                 Text(
-                  'Current offset: (${transformModel.imagePosition.dx.toStringAsFixed(1)}, ${transformModel.imagePosition.dy.toStringAsFixed(1)})',
+                  AppLocalizations.format(
+                    'cropperPage.currentOffset',
+                    {
+                      'dx': transformModel.imagePosition.dx.toStringAsFixed(1),
+                      'dy': transformModel.imagePosition.dy.toStringAsFixed(1),
+                    },
+                  ),
                   style: const TextStyle(
                     fontSize: 12,
                     color: Colors.black,
@@ -76,21 +70,26 @@ class ImageCropperHelpOverlay extends StatelessWidget {
                 ),
                 if (transformModel.originalImage != null)
                   Text(
-                    'Image size: ${transformModel.originalImage!.width} x ${transformModel.originalImage!.height}',
+                    AppLocalizations.format(
+                      'cropperPage.imageSize',
+                      {
+                        'width': transformModel.originalImage!.width.toString(),
+                        'height': transformModel.originalImage!.height.toString(),
+                      },
+                    ),
                     style: const TextStyle(
                       fontSize: 12,
                       color: Colors.black,
                     ),
                   ),
-                // Cropped image preview under metrics
                 if (croppedImageBytes != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 12),
                     child: Column(
                       children: [
-                        const Text(
-                          'Preview',
-                          style: TextStyle(
+                        Text(
+                          AppLocalizations.get('cropperPage.preview'),
+                          style: const TextStyle(
                               fontSize: 12, fontWeight: FontWeight.bold),
                         ),
                         Image.memory(

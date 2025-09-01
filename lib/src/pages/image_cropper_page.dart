@@ -9,6 +9,7 @@ import 'dart:convert';
 import '../models/image_transform_model.dart';
 import '../services/image_service.dart';
 import '../services/image_crop_service.dart';
+import '../utils/app_localizations.dart';
 import '../widgets/image_cropper_overlay.dart';
 import '../widgets/transformable_image_widget.dart';
 import '../utils/constants.dart';
@@ -18,6 +19,7 @@ import '../utils/api_endpoints.dart';
 import '../services/auth_http_service.dart';
 import '../utils/image_cropper_key_handler.dart';
 import '../widgets/image_cropper_help_overlay.dart';
+import '../widgets/image_cropper_app_bar.dart';
 
 /// Main page for image cropping functionality
 class ImageCropperPage extends StatefulWidget {
@@ -385,17 +387,23 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
       Log.d('Crop, save, and upload completed');
 
       String savedMsg = '';
-      // Only show 'Saved' for Windows app
       if (!kIsWeb) {
-        savedMsg = 'Saved: ${savedFile?.path ?? ""}\n';
+        savedMsg = '${AppLocalizations.format(
+          'cropperPage.successSaved',
+          {'path': savedFile?.path ?? ''}
+        )}\n';
       }
       _showSuccessMessage(
-        'Image processed:\n'
+        '${AppLocalizations.get('cropperPage.successProcessed')}\n'
         '$savedMsg'
-        'Upload: ${uploadResult['success'] == true ? "Success" : "Failed"}',
+        '${AppLocalizations.get(uploadResult['success'] == true
+          ? 'cropperPage.uploadSuccess'
+          : 'cropperPage.uploadFailed')}'
       );
     } catch (e) {
-      _showErrorMessage('Failed to crop, save, or upload image: $e');
+      _showErrorMessage(
+        AppLocalizations.format('cropperPage.errorCropSaveUpload', {'error': '$e'})
+      );
       Log.e('Crop operation failed: $e');
     }
   }
@@ -499,91 +507,34 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            const Text('Image Cropper'),
-            const SizedBox(width: 16),
-            // Label for filegroup selector
-            const Text(
-              'Filegroup:',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(width: 8),
-            // Filegroup selector
-            SizedBox(
-              width: 220,
-              child: _loadingFilegroups
-                  ? const CircularProgressIndicator()
-                  : DropdownButton<String>(
-                      value: _selectedFilegroupName,
-                      isExpanded: true,
-                      items: _filegroups
-                          .map(
-                            (fg) => DropdownMenuItem(
-                              value: fg.groupName,
-                              child: Text('${fg.groupName} (${fg.imageCount})'),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() {
-                            _selectedFilegroupName = value;
-                          });
-                        }
-                      },
-                    ),
-            ),
-            const SizedBox(width: 16),
-            // New filegroup input
-            SizedBox(
-              width: 120,
-              child: TextField(
-                controller: _filegroupController,
-                decoration: const InputDecoration(
-                  labelText: 'New filegroup',
-                  hintText: 'Add filegroup',
-                  contentPadding: EdgeInsets.symmetric(
-                    vertical: 0,
-                    horizontal: 8,
-                  ),
-                ),
-                onSubmitted: (value) {
-                  if (value.isNotEmpty &&
-                      !_filegroups.any((fg) => fg.groupName == value)) {
-                    setState(() {
-                      final newGroup = FileGroupDto(
-                        groupName: value,
-                        imageCount: 0,
-                      );
-                      _filegroups.add(newGroup);
-                      _selectedFilegroupName = newGroup.groupName;
-                      _filegroupController.clear();
-                    });
-                  }
-                },
-              ),
-            ),
-            const SizedBox(width: 16),
-            ElevatedButton(
-              onPressed: pickImageWeb,
-              child: const Text('Select Photo Web'),
-            ),
-            const SizedBox(width: 8),
-            ElevatedButton(
-              onPressed: _cropAndSaveImage,
-              child: const Text('Cut & Save'),
-            ),
-            const SizedBox(width: 16),
-            Text(
-              'kIsWeb: ${kIsWeb ? "true" : "false"}',
-              style: const TextStyle(fontSize: 14),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.blueAccent,
-        centerTitle: true,
+      appBar: ImageCropperAppBar(
+        filegroups: _filegroups,
+        selectedFilegroupName: _selectedFilegroupName,
+        loadingFilegroups: _loadingFilegroups,
+        filegroupController: _filegroupController,
+        onFilegroupChanged: (value) {
+          if (value != null) {
+            setState(() {
+              _selectedFilegroupName = value;
+            });
+          }
+        },
+        onNewFilegroup: (value) {
+          if (value.isNotEmpty &&
+              !_filegroups.any((fg) => fg.groupName == value)) {
+            setState(() {
+              final newGroup = FileGroupDto(
+                groupName: value,
+                imageCount: 0,
+              );
+              _filegroups.add(newGroup);
+              _selectedFilegroupName = newGroup.groupName;
+              _filegroupController.clear();
+            });
+          }
+        },
+        onPickImageWeb: pickImageWeb,
+        onCropAndSaveImage: _cropAndSaveImage,
       ),
       body: Column(
         children: [

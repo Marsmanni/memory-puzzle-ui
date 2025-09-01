@@ -1,9 +1,11 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_application_2/src/utils/api_endpoints.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import '../utils/app_localizations.dart';
 import '../dtos/api_dtos.dart';
 import '../services/auth_http_service.dart';
+import '../utils/api_endpoints.dart';
 
 class CreatePage extends StatefulWidget {
   const CreatePage({super.key});
@@ -18,9 +20,11 @@ class _CreatePageState extends State<CreatePage> {
   bool _loading = true;
   String? _error;
 
-  List<FileGroupDto>_fileGroups = [];
+  List<FileGroupDto> _fileGroups = [];
   String? _selectedGroupName;
   bool _loadingFileGroups = true;
+
+  final TextEditingController saveToController = TextEditingController();
 
   @override
   void initState() {
@@ -93,53 +97,131 @@ class _CreatePageState extends State<CreatePage> {
     }
   }
 
-Future<void> _fetchImagesGroup(String? groupName) async {
-  setState(() {
-    _loading = true;
-    _error = null;
-  });
+  Future<void> _fetchImagesGroup(String? groupName) async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
 
-  try {
-    final url = Uri.parse(
-      ApiEndpoints.imagesFilegroup.replaceFirst('{groupName}', groupName ?? ''),
-    );
-    final response = await AuthHttpService.get(url);
+    try {
+      final url = Uri.parse(
+        ApiEndpoints.imagesFilegroup.replaceFirst('{groupName}', groupName ?? ''),
+      );
+      final response = await AuthHttpService.get(url);
 
-    if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          _imageUrls = data.cast<String>();
+          _loading = false;
+        });
+      } else {
+        setState(() {
+          _error = 'Failed to load images: ${response.statusCode}';
+          _loading = false;
+        });
+      }
+    } catch (e) {
       setState(() {
-        _imageUrls = data.cast<String>();
-        _loading = false;
-      });
-    } else {
-      setState(() {
-        _error = 'Failed to load images: ${response.statusCode}';
+        _error = 'Error: $e';
         _loading = false;
       });
     }
-  } catch (e) {
-    setState(() {
-      _error = 'Error: $e';
-      _loading = false;
-    });
   }
-}
+
   @override
   Widget build(BuildContext context) {
-
-    final TextEditingController saveToController = TextEditingController();
-    final List<String> dropdownSamples = [
-      'Group A',
-      'Group B',
-      'Group C',
-      'Group D',
-      'Group E',
-    ];
-    String selectedDropdown = dropdownSamples[0];
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create the puzzle'),
+        title: Text(AppLocalizations.get('createPage.title')), // e.g. 'Create the puzzle'
+        actions: [
+          IconButton(
+            tooltip: AppLocalizations.get('selectAll'),
+            icon: const Icon(Icons.select_all),
+            onPressed: () {
+              setState(() {
+                _selectedIndexes = Set.from(List.generate(_imageUrls.length, (i) => i));
+              });
+            },
+          ),
+          IconButton(
+            tooltip: AppLocalizations.get('deselectAll'),
+            icon: const Icon(Icons.remove_done),
+            onPressed: () {
+              setState(() {
+                _selectedIndexes.clear();
+              });
+            },
+          ),
+          SizedBox(
+            width: 180,
+            child: _loadingFileGroups
+                ? const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: CircularProgressIndicator(),
+                  )
+                : DropdownButton<String>(
+                    value: _selectedGroupName,
+                    underline: Container(),
+                    items: _fileGroups
+                        .map((group) => DropdownMenuItem<String>(
+                              value: group.groupName,
+                              child: Text(
+                                '${group.groupName} (${group.imageCount})',
+                              ),
+                            ))
+                        .toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedGroupName = value;
+                        _fetchImagesGroup(_selectedGroupName);
+                      });
+                    },
+                  ),
+          ),
+          SizedBox(
+            width: 180,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+              child: TextField(
+                controller: saveToController,
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.get('saveTo'),
+                  border: const OutlineInputBorder(),
+                  isDense: true,
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: ElevatedButton(
+              onPressed: () async {
+                final selectedUids = _selectedIndexes.map((i) => _imageUrls[i]).toList();
+                final puzzleDto = PuzzleDtoBase(
+                  name: saveToController.text,
+                  images: selectedUids.map((uid) => PuzzleImageDto(imageUid: uid)).toList(),
+                );
+                final response = await AuthHttpService.post(
+                  Uri.parse(ApiEndpoints.puzzlesCreate),
+                  puzzleDto.toJson(),
+                );
+                if (response.statusCode == 200 || response.statusCode == 201) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(AppLocalizations.get('saveSuccess'))),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(
+                      '${AppLocalizations.get('saveFailed')}: ${response.statusCode}',
+                    )),
+                  );
+                }
+              },
+              child: Text(AppLocalizations.get('saveTo')),
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -150,8 +232,7 @@ Future<void> _fetchImagesGroup(String? groupName) async {
                     ? Center(child: Text(_error!))
                     : GridView.builder(
                         padding: const EdgeInsets.all(12),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 6,
                           crossAxisSpacing: 18,
                           mainAxisSpacing: 18,
@@ -164,12 +245,8 @@ Future<void> _fetchImagesGroup(String? groupName) async {
                               setState(() {
                                 if (isSelected) {
                                   _selectedIndexes.remove(index);
-                                  debugPrint(
-                                      'Deselected image at index $index: ${_imageUrls[index]}');
                                 } else {
                                   _selectedIndexes.add(index);
-                                  debugPrint(
-                                      'Selected image at index $index: ${_imageUrls[index]}');
                                 }
                               });
                             },
@@ -198,115 +275,6 @@ Future<void> _fetchImagesGroup(String? groupName) async {
                           );
                         },
                       ),
-          ),
-          Container(
-            color: Colors.grey[100],
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 18),
-            child: Row(
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      _selectedIndexes =
-                          Set.from(List.generate(_imageUrls.length, (i) => i));
-                    });
-                    debugPrint('Selected all images');
-                  },
-                  child: const Text('Select All'),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      _selectedIndexes.clear();
-                    });
-                    debugPrint('Deselected all images');
-                  },
-                  child: const Text('Deselect All'),
-                ),
-                const SizedBox(width: 16),
-                SizedBox(
-                  width: 120,
-                  child: DropdownButton<String>(
-                    value: selectedDropdown,
-                    items: dropdownSamples
-                        .map((sample) => DropdownMenuItem(
-                              value: sample,
-                              child: Text(sample),
-                            ))
-                        .toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        if (value != null) selectedDropdown = value;
-                      });
-                      debugPrint('Dropdown selected: $selectedDropdown');
-                    },
-                  ),
-                ),
-                const SizedBox(width: 16),
-                SizedBox(
-                  width: 180,
-                  child: _loadingFileGroups
-                      ? const CircularProgressIndicator()
-                      : DropdownButton<String>(
-                          value: _selectedGroupName,
-                          items: _fileGroups
-                              .map((group) => DropdownMenuItem<String>(
-                                    value: group.groupName,
-                                    child: Text(
-                                        '${group.groupName} (${group.imageCount})'),
-                                  ))
-                              .toList(),
-                          onChanged: (value) {
-                            setState(() {
-                              _selectedGroupName = value;
-                              _fetchImagesGroup(_selectedGroupName);
-                            });
-                          },
-                        ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: TextField(
-                    controller: saveToController,
-                    decoration: const InputDecoration(
-                      labelText: 'Save To',
-                      border: OutlineInputBorder(),
-                      isDense: true,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: () async {
-                    debugPrint(
-                      'SaveTo: ${saveToController.text}, Dropdown: $selectedDropdown, Selected: $_selectedIndexes');
-
-                    // Collect selected image UIDs (assuming _imageUrls contains UIDs or URLs)
-                    final selectedUids = _selectedIndexes.map((i) => _imageUrls[i]).toList();
-
-                    // Prepare payload matching PuzzleDto and PuzzleImageDto
-                    final puzzleDto = PuzzleDtoBase(
-                    name: saveToController.text,
-                    images: selectedUids.map((uid) => PuzzleImageDto(imageUid: uid)).toList(),
-                  );
-                    // Call the new endpoint (POST recommended for creating new resources)
-                    final response = await AuthHttpService.post(Uri.parse(ApiEndpoints.puzzlesCreate), puzzleDto.toJson());
-
-                    if (response.statusCode == 200 || response.statusCode == 201) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Puzzle setup saved successfully!')),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Failed to save puzzle setup: ${response.statusCode}')),
-                      );
-                    }
-                  },
-                  child: const Text('SaveTo'),
-                ),
-              ],
-            ),
           ),
         ],
       ),

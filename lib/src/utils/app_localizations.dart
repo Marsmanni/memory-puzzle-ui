@@ -3,25 +3,42 @@ class AppLocalizations {
 
   static final Map<String, Map<String, String>> _localizedValues = {
     'de': {
-      'adminOverview': 'Admin Übersicht',
-      'allPuzzles': 'Alle Puzzles',
-      'allUsers': 'Alle Benutzer',
-      'usersTable': 'Benutzer (Tabelle)',
-      'placeholder_himmel': 'Himmel',
-      'placeholder_puzzle': 'Puzzle',
-      'placeholder_wiese': 'Wiese',
-      'placeholder_smiley': 'Smiley',
-      'puzzles': 'Puzzles',
-      'roles': 'Rollen',
-      'lastLogin': 'Letzter Login',
-      'neverLoggedIn': 'Nie eingeloggt',
-      'author': 'Autor',
-      'images': 'Bilder',
-      'public': 'Öffentlich',
-      'id': 'ID',
-      'noPuzzlesFound': 'Keine Puzzles gefunden',
-      'updateError': 'Fehler beim Aktualisieren!',
-      'username': 'Benutzername',
+      // Users Page
+      'usersPage.title': 'Administrator-Übersicht ',
+      'usersPage.puzzles': 'Puzzles',
+      'usersPage.table': 'Benutzer (Tabelle)',
+      'usersPage.list': 'Benutzerliste',
+      'usersPage.noUsers': 'Keine Benutzer gefunden',
+
+      // Puzzle Page
+      'puzzlePage.title': 'Alle Puzzles',
+      'puzzlePage.noPuzzles': 'Keine Puzzles gefunden',
+
+      // Play Page
+      'playPage.title': 'Spielen',
+      'playPage.reset': 'Zurücksetzen',
+      'playPage.player': 'Spieler',
+      'playPage.players': 'Spieler',
+      'playPage.moves': 'Züge',
+      'playPage.matches': 'Paare',
+      'playPage.introLoading': 'Spieldaten werden geladen...',
+      'playPage.settings': 'Einstellungen',
+      'playPage.selectPlaceholder': 'Platzhalter auswählen',
+      'playPage.language': 'Sprache',
+
+      // Widgets
+      'userAdminCard.puzzles': 'Puzzles',
+      'userAdminCard.username': 'Benutzername',
+      'userAdminCard.roles': 'Rollen',
+      'userAdminCard.lastLogin': 'Letzter Login',
+      'userAdminCard.neverLoggedIn': 'Nie eingeloggt',
+
+      'puzzleAdminCard.author': 'Autor',
+      'puzzleAdminCard.images': 'Bilder',
+      'puzzleAdminCard.public': 'Öffentlich',
+      'puzzleAdminCard.id': 'ID',
+
+      // General
       'login': 'Login',
       'logout': 'Logout',
       'play': 'Spielen',
@@ -29,30 +46,97 @@ class AppLocalizations {
       'create': 'Erstellen',
       'users': 'Benutzer',
       'systemInfo': 'Systeminfo',
-      'settings': 'Einstellungen',
-      'selectPlaceholder': 'Platzhalter auswählen',
-      'language': 'Sprache',
+
+      // Create Page
+      'createPage.title': 'Puzzle erstellen',
+      'selectAll': 'Alle auswählen',
+      'deselectAll': 'Auswahl aufheben',
+      'saveTo': 'Speichern unter',
+      'saveSuccess': 'Puzzle-Einstellungen erfolgreich gespeichert!',
+      'saveFailed': 'Fehler beim Speichern der Puzzle-Einstellungen',
+
+      // Play Page Placeholders
+      'playPage.placeholder_himmel': 'Himmel',
+      'playPage.placeholder_puzzle': 'Puzzle',
+      'playPage.placeholder_wiese': 'Wiese',
+      'playPage.placeholder_smiley': 'Smiley',
+
+      // Cropper Page
+      'cropperPage.title': 'Bildbeschneider',
+      'cropperPage.filegroupLabel': 'Dateigruppe:',
+      'cropperPage.newFilegroupLabel': 'Neue Dateigruppe',
+      'cropperPage.newFilegroupHint': 'Dateigruppe hinzufügen',
+      'cropperPage.selectPhotoWeb': 'Foto-Web auswählen',
+      'cropperPage.cutAndSave': 'Zuschneiden & Speichern',
+      'cropperPage.errorLoadAsset': 'Fehler beim Laden des Asset-Bildes',
+      'cropperPage.errorPickImage': 'Fehler beim Auswählen des Bildes',
+      'cropperPage.errorPickImageWeb': 'Fehler beim Auswählen des Bildes (Web)',
+      'cropperPage.errorNoImage': 'Bitte wählen Sie zuerst ein Bild aus.',
+      'cropperPage.errorViewDimensions': 'Konnte die Ansichtsdimensionen nicht abrufen.',
+      'cropperPage.successProcessed': 'Bild verarbeitet:',
+      'cropperPage.successSaved': 'Gespeichert: {path}',
+      'cropperPage.errorCropSaveUpload': 'Fehler beim Zuschneiden, Speichern oder Hochladen des Bildes: {error}',
+      'cropperPage.errorSaveParts': 'Fehler beim Speichern des Bildes in vier Teilen',
+      'cropperPage.uploadSuccess': 'Upload: Erfolgreich',
+      'cropperPage.uploadFailed': 'Upload: Fehlgeschlagen',
+
+      'cropperPage.helpText': '''
+ENHANCED CONTROLS:
+🖱️ Mouse:
+  • Scroll = Zoom
+  • Shift+Scroll = Rotate
+  • Ctrl+Scroll = Precise Zoom
+  • Ctrl+Shift+Scroll = Precise Rotate
+  • Drag = Move
+  • Ctrl+Drag = Zoom
+  • Ctrl+Shift+Drag = Rotate
+⌨️ Keyboard:
+  • Arrow/WASD = Move
+  • Ctrl+Arrow/WASD = Precise Move
+  • Shift+Arrow/WASD = Fast Move
+  • Ctrl+Left/Right = Precise Rotate
+  • Q/E = Zoom
+  • Z/X = Rotate
+  • R = Reset
+''',
     },
     'en': {
-      'adminOverview': 'Admin Overview',
-      'allPuzzles': 'All Puzzles',
-      'allUsers': 'All Users',
-      'usersTable': 'Users (Table)',
-      'placeholder_himmel': 'Sky',
-      'placeholder_puzzle': 'Puzzle',
-      'placeholder_wiese': 'Meadow',
-      'placeholder_smiley': 'Smiley',
-      'puzzles': 'Puzzles',
-      'roles': 'Roles',
-      'lastLogin': 'Last login',
-      'neverLoggedIn': 'Never logged in',
-      'author': 'Author',
-      'images': 'Images',
-      'public': 'Public',
-      'id': 'ID',
-      'noPuzzlesFound': 'No puzzles found',
-      'updateError': 'Error updating!',
-      'username': 'Username',
+      // Users Page
+      'usersPage.title': 'All Users',
+      'usersPage.puzzles': 'Puzzles',
+      'usersPage.table': 'Users (Table)',
+      'usersPage.list': 'User List',
+      'usersPage.noUsers': 'No users found',
+
+      // Puzzle Page
+      'puzzlePage.title': 'All Puzzles',
+      'puzzlePage.noPuzzles': 'No puzzles found',
+
+      // Play Page
+      'playPage.title': 'Play',
+      'playPage.reset': 'Reset',
+      'playPage.player': 'Player',
+      'playPage.players': 'Players',
+      'playPage.moves': 'Moves',
+      'playPage.matches': 'Matches',
+      'playPage.introLoading': 'Loading game data...',
+      'playPage.settings': 'Settings',
+      'playPage.selectPlaceholder': 'Select Placeholder',
+      'playPage.language': 'Language',
+
+      // Widgets
+      'userAdminCard.puzzles': 'Puzzles',
+      'userAdminCard.roles': 'Roles',
+      'userAdminCard.username': 'Username',
+      'userAdminCard.lastLogin': 'Last login',
+      'userAdminCard.neverLoggedIn': 'Never logged in',
+
+      'puzzleAdminCard.author': 'Author',
+      'puzzleAdminCard.images': 'Images',
+      'puzzleAdminCard.public': 'Public',
+      'puzzleAdminCard.id': 'ID',
+
+      // General
       'login': 'Login',
       'logout': 'Logout',
       'play': 'Play',
@@ -60,17 +144,75 @@ class AppLocalizations {
       'create': 'Create',
       'users': 'Users',
       'systemInfo': 'System Info',
-      'settings': 'Settings',
-      'selectPlaceholder': 'Select Placeholder',
-      'language': 'Language',
+
+      // Create Page
+      'createPage.title': 'Create the puzzle',
+      'selectAll': 'Select All',
+      'deselectAll': 'Deselect All',
+      'saveTo': 'Save To',
+      'saveSuccess': 'Puzzle setup saved successfully!',
+      'saveFailed': 'Failed to save puzzle setup',
+
+      // Play Page Placeholders
+      'playPage.placeholder_himmel': 'Sky',
+      'playPage.placeholder_puzzle': 'Puzzle',
+      'playPage.placeholder_wiese': 'Meadow',
+      'playPage.placeholder_smiley': 'Smiley',
+
+      // Cropper Page
+      'cropperPage.title': 'Image Cropper',
+      'cropperPage.filegroupLabel': 'Filegroup:',
+      'cropperPage.newFilegroupLabel': 'New filegroup',
+      'cropperPage.newFilegroupHint': 'Add filegroup',
+      'cropperPage.selectPhotoWeb': 'Select Photo Web',
+      'cropperPage.cutAndSave': 'Cut & Save',
+      'cropperPage.errorLoadAsset': 'Failed to load asset image',
+      'cropperPage.errorPickImage': 'Failed to pick image',
+      'cropperPage.errorPickImageWeb': 'Failed to pick image (web)',
+      'cropperPage.errorNoImage': 'Please select an image first.',
+      'cropperPage.errorViewDimensions': 'Could not get view dimensions.',
+      'cropperPage.successProcessed': 'Image processed:',
+      'cropperPage.successSaved': 'Saved: {path}',
+      'cropperPage.errorCropSaveUpload': 'Failed to crop, save, or upload image: {error}',
+      'cropperPage.errorSaveParts': 'Failed to save image in four parts',
+      'cropperPage.uploadSuccess': 'Upload: Success',
+      'cropperPage.uploadFailed': 'Upload: Failed',
+
+      'cropperPage.helpText': '''
+ENHANCED CONTROLS:
+🖱️ Mouse:
+  • Scroll = Zoom
+  • Shift+Scroll = Rotate
+  • Ctrl+Scroll = Precise Zoom
+  • Ctrl+Shift+Scroll = Precise Rotate
+  • Drag = Move
+  • Ctrl+Drag = Zoom
+  • Ctrl+Shift+Drag = Rotate
+⌨️ Keyboard:
+  • Arrow/WASD = Move
+  • Ctrl+Arrow/WASD = Precise Move
+  • Shift+Arrow/WASD = Fast Move
+  • Ctrl+Left/Right = Precise Rotate
+  • Q/E = Zoom
+  • Z/X = Rotate
+  • R = Reset
+''',
     },
   };
 
   static String get(String key) {
-    return _localizedValues[languageCode]?[key] ?? key;
+    return _localizedValues[languageCode]?[key] ?? "MISSING KEY {$key}";
   }
 
   static void setLanguage(String code) {
     languageCode = code;
+  }
+
+  static String format(String key, Map<String, String> params) {
+    String template = get(key);
+    params.forEach((k, v) {
+      template = template.replaceAll('{$k}', v);
+    });
+    return template;
   }
 }

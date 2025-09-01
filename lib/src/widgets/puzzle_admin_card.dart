@@ -20,11 +20,11 @@ class PuzzleAdminCard extends StatelessWidget {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('${AppLocalizations.get('author')}: ${puzzle.creator}'),
-            Text('${AppLocalizations.get('images')}: ${puzzle.imageCount}'),
+            Text('${AppLocalizations.get('puzzleAdminCard.author')}: ${puzzle.creator}'),
+            Text('${AppLocalizations.get('puzzleAdminCard.images')}: ${puzzle.imageCount}'),
             Row(
               children: [
-                Text('${AppLocalizations.get('public')}: '),
+                Text('${AppLocalizations.get('puzzleAdminCard.public')}: '),
                 Checkbox(
                   value: puzzle.isPublic,
                   onChanged: onPublicChanged,
@@ -34,7 +34,7 @@ class PuzzleAdminCard extends StatelessWidget {
           ],
         ),
         trailing: Text(
-          '${AppLocalizations.get('id')}: ${puzzle.id}\n'
+          '${AppLocalizations.get('puzzleAdminCard.id')}: ${puzzle.id}\n'
           '${puzzle.creationTime.toLocal()}',
         ),
       ),

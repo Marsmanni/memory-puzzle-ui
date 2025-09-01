@@ -5,6 +5,7 @@ import 'src/pages/image_cropper_page.dart';
 import 'src/pages/play_page.dart';
 import 'src/pages/create_page.dart';
 import 'src/pages/users_page.dart';
+import 'src/utils/app_localizations.dart';
 import 'src/widgets/login_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'src/utils/constants.dart';
@@ -104,7 +105,7 @@ class _MyAppState extends State<MyApp> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('System Info'),
+        title: Text(AppLocalizations.get('systemInfo')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,

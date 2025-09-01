@@ -34,7 +34,7 @@ class PuzzleAdminList extends StatelessWidget {
     }
     if (puzzles.isEmpty) {
       return Center(
-        child: Text(AppLocalizations.get('noPuzzlesFound')),
+        child: Text(AppLocalizations.get('puzzlePage.noPuzzles')),
       );
     }
     return ListView(
