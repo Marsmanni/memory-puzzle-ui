@@ -122,7 +122,7 @@ class _PlayPageState extends State<PlayPage> {
     final selectedPuzzle = (_selectedPuzzleIndex >= 0 && _groups.isNotEmpty)
         ? _groups[_selectedPuzzleIndex]
         : null;
-    gameManager.initializeGame(selectedPuzzle?.images ?? []);
+    gameManager.initializeGame(selectedPuzzle?.images ?? [], puzzleId: selectedPuzzle?.id ?? 0, currentUser: '');
     _precacheImages(selectedPuzzle);
   }
 

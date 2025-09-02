@@ -152,6 +152,42 @@ class PuzzleImageDto {
   };
 }
 
+class PuzzleLogDto {
+  int puzzleId;
+  String user;
+  DateTime startTime;
+  DateTime endTime;
+  String mode;
+  String comment;
+
+  PuzzleLogDto({
+    required this.puzzleId,
+    required this.user,
+    required this.startTime,
+    required this.endTime,
+    required this.mode,
+    required this.comment,
+  });
+
+  factory PuzzleLogDto.fromJson(Map<String, dynamic> json) => PuzzleLogDto(
+    puzzleId: json['puzzleId'] ?? 0,
+    user: json['user'] ?? '',
+    startTime: DateTime.parse(json['startTime']),
+    endTime: DateTime.parse(json['endTime']),
+    mode: json['mode'] ?? '',
+    comment: json['comment'] ?? '',
+  );
+
+  Map<String, dynamic> toJson() => {
+    'puzzleId': puzzleId,
+    'user': user,
+    'startTime': startTime.toIso8601String(),
+    'endTime': endTime.toIso8601String(),
+    'mode': mode,
+    'comment': comment,
+  };
+}
+
 class ServiceDto {
   String serviceType;
   String implementationType;

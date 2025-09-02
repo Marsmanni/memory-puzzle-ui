@@ -19,6 +19,7 @@ class ApiEndpoints {
   static final String puzzlesLogPuzzle = '${AppConstants.apiBaseUrl}/api/v1/puzzles/{puzzleId}/log';
   static final String puzzlesDefault = '${AppConstants.apiBaseUrl}/api/v1/puzzles/default';
   static final String puzzlesDefaults = '${AppConstants.apiBaseUrl}/api/v1/puzzles/defaults';
+  static final String puzzlesByUser = '${AppConstants.apiBaseUrl}/api/v1/puzzles/user';
   static final String imagesGetAll = '${AppConstants.apiBaseUrl}/api/v1/images';
   static final String imagesGetById = '${AppConstants.apiBaseUrl}/api/v1/images/{id}';
   static final String imagesUpload = '${AppConstants.apiBaseUrl}/api/v1/images/upload';
