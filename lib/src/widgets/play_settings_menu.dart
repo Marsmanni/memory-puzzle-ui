@@ -14,8 +14,8 @@ class PlaySettingsMenu extends StatelessWidget {
     required this.onPlaceholderChanged,
     required this.languageCode,
     required this.onLanguageChanged,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

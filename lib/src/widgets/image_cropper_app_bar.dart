@@ -31,10 +31,25 @@ class ImageCropperAppBar extends StatelessWidget implements PreferredSizeWidget 
         children: [
           Text(AppLocalizations.get('cropperPage.title')),
           const SizedBox(width: 16),
-          Text(
-            AppLocalizations.get('cropperPage.filegroupLabel'),
-            style: const TextStyle(fontWeight: FontWeight.bold),
+          // Neue Dateigruppe zuerst
+          SizedBox(
+            width: 120,
+            child: TextField(
+              controller: filegroupController,
+              decoration: InputDecoration(
+                labelText: AppLocalizations.get('cropperPage.newFilegroupLabel'),
+                hintText: AppLocalizations.get('cropperPage.newFilegroupHint'),
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 0,
+                  horizontal: 8,
+                ),
+              ),
+              onSubmitted: onNewFilegroup,
+            ),
           ),
+          const SizedBox(width: 16),
+          // Dateigruppe Dropdown
+          Text(AppLocalizations.get('cropperPage.filegroupLabel')),
           const SizedBox(width: 8),
           SizedBox(
             width: 220,
@@ -55,22 +70,6 @@ class ImageCropperAppBar extends StatelessWidget implements PreferredSizeWidget 
                   ),
           ),
           const SizedBox(width: 16),
-          SizedBox(
-            width: 120,
-            child: TextField(
-              controller: filegroupController,
-              decoration: InputDecoration(
-                labelText: AppLocalizations.get('cropperPage.newFilegroupLabel'),
-                hintText: AppLocalizations.get('cropperPage.newFilegroupHint'),
-                contentPadding: const EdgeInsets.symmetric(
-                  vertical: 0,
-                  horizontal: 8,
-                ),
-              ),
-              onSubmitted: onNewFilegroup,
-            ),
-          ),
-          const SizedBox(width: 16),
           ElevatedButton(
             onPressed: onPickImageWeb,
             child: Text(AppLocalizations.get('cropperPage.selectPhotoWeb')),
@@ -82,8 +81,8 @@ class ImageCropperAppBar extends StatelessWidget implements PreferredSizeWidget 
           ),
         ],
       ),
-      backgroundColor: Colors.blueAccent,
       centerTitle: true,
+      // Remove custom background color
     );
   }
 

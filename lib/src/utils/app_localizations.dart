@@ -99,6 +99,14 @@ ERWEITERTE STEUERUNG:
   • Z/X = Drehen
   • R = Zurücksetzen
 ''',
+      // Login Page
+      'login.username': 'Benutzername',
+      'login.password': 'Passwort',
+
+      // Cropper additional info
+      'cropperPage.currentScale': 'Aktueller Maßstab: {scale}',
+      'cropperPage.currentOffset': 'Aktuelle Position: ({dx}, {dy})',
+      'cropperPage.imageSize': 'Bildgröße: {width} x {height}',
     },
     'en': {
       // Users Page
@@ -197,6 +205,14 @@ ENHANCED CONTROLS:
   • Z/X = Rotate
   • R = Reset
 ''',
+      // Login Page
+      'login.username': 'Username',
+      'login.password': 'Password',
+
+      // Cropper additional info
+      'cropperPage.currentScale': 'Current scale: {scale}',
+      'cropperPage.currentOffset': 'Current offset: ({dx}, {dy})',
+      'cropperPage.imageSize': 'Image size: {width} x {height}',
     },
   };
 

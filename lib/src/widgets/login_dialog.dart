@@ -79,11 +79,11 @@ class _LoginDialogState extends State<LoginDialog> {
         children: [
           TextField(
             controller: _usernameController,
-            decoration: InputDecoration(labelText: AppLocalizations.get('username')),
+            decoration: InputDecoration(labelText: AppLocalizations.get('login.username')),
           ),
           TextField(
             controller: _passwordController,
-            decoration: const InputDecoration(labelText: 'Password'),
+            decoration: InputDecoration(labelText: AppLocalizations.get('login.password')),
             obscureText: true,
           ),
           if (_error != null)
