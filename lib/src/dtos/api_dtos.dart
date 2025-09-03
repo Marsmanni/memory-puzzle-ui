@@ -70,7 +70,7 @@ class PuzzleAdminDto {
     'id': id,
     'name': name,
     'creator': creator,
-    'creationTime': creationTime,
+    'creationTime': creationTime != null ? creationTime.toIso8601String() : null,
     'imageCount': imageCount,
     'isPublic': isPublic,
   };
@@ -127,7 +127,7 @@ class PuzzleDto {
 
   Map<String, dynamic> toJson() => {
     'id': id,
-    'creationTime': creationTime,
+    'creationTime': creationTime != null ? creationTime.toIso8601String() : null,
     'author': author,
     'authorRole': authorRole,
     'isPublic': isPublic,
@@ -181,8 +181,8 @@ class PuzzleLogDto {
   Map<String, dynamic> toJson() => {
     'puzzleId': puzzleId,
     'user': user,
-    'startTime': startTime.toIso8601String(),
-    'endTime': endTime.toIso8601String(),
+    'startTime': startTime != null ? startTime.toIso8601String() : null,
+    'endTime': endTime != null ? endTime.toIso8601String() : null,
     'mode': mode,
     'comment': comment,
   };
@@ -236,6 +236,12 @@ class SystemInfoDto {
   String serverIp;
   String clientIp;
   DateTime serverTime;
+  String serverVersion;
+  DateTime? serverDeploymentTime;
+  String serverGitVersion;
+  String clientVersion;
+  DateTime? clientDeploymentTime;
+  String clientGitVersion;
 
   SystemInfoDto({
     required this.databaseProvider,
@@ -245,6 +251,12 @@ class SystemInfoDto {
     required this.serverIp,
     required this.clientIp,
     required this.serverTime,
+    required this.serverVersion,
+    this.serverDeploymentTime,
+    required this.serverGitVersion,
+    required this.clientVersion,
+    this.clientDeploymentTime,
+    required this.clientGitVersion,
   });
 
   factory SystemInfoDto.fromJson(Map<String, dynamic> json) => SystemInfoDto(
@@ -255,6 +267,12 @@ class SystemInfoDto {
     serverIp: json['serverIp'] ?? '',
     clientIp: json['clientIp'] ?? '',
     serverTime: DateTime.parse(json['serverTime']),
+    serverVersion: json['serverVersion'] ?? '',
+    serverDeploymentTime: json['serverDeploymentTime'] != null ? DateTime.parse(json['serverDeploymentTime']) : null,
+    serverGitVersion: json['serverGitVersion'] ?? '',
+    clientVersion: json['clientVersion'] ?? '',
+    clientDeploymentTime: json['clientDeploymentTime'] != null ? DateTime.parse(json['clientDeploymentTime']) : null,
+    clientGitVersion: json['clientGitVersion'] ?? '',
   );
 
   Map<String, dynamic> toJson() => {
@@ -264,7 +282,13 @@ class SystemInfoDto {
     'aspNetVersion': aspNetVersion,
     'serverIp': serverIp,
     'clientIp': clientIp,
-    'serverTime': serverTime,
+    'serverTime': serverTime != null ? serverTime.toIso8601String() : null,
+    'serverVersion': serverVersion,
+    'serverDeploymentTime': serverDeploymentTime != null ? serverDeploymentTime?.toIso8601String() : null,
+    'serverGitVersion': serverGitVersion,
+    'clientVersion': clientVersion,
+    'clientDeploymentTime': clientDeploymentTime != null ? clientDeploymentTime?.toIso8601String() : null,
+    'clientGitVersion': clientGitVersion,
   };
 }
 
@@ -291,7 +315,7 @@ class UserAdminDto {
   Map<String, dynamic> toJson() => {
     'username': username,
     'roles': roles,
-    'lastLogin': lastLogin,
+    'lastLogin': lastLogin != null ? lastLogin?.toIso8601String() : null,
     'puzzleCount': puzzleCount,
   };
 }

@@ -45,7 +45,7 @@ class AuthInfo {
 
 class _MyAppState extends State<MyApp> {
   AuthInfo _auth = AuthInfo();
-  String _deploymentText = '';
+  SystemInfoDto? _systemInfoDto; // <-- new field
 
   @override
   void initState() {
@@ -66,17 +66,55 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> _loadDeploymentText() async {
-    try {
-      final text = await rootBundle.loadString('assets/deployment.txt');
-      setState(() {
-        _deploymentText = text.trim();
-      });
-    } catch (e) {
-      setState(() {
-        _deploymentText = 'local debug';
-      });
+  try {
+    final text = await rootBundle.loadString('assets/deployment.txt');
+    String clientVersion = '';
+    DateTime? clientDeploymentTime;
+    String clientGitVersion = '';
+    final lines = text.trim().split('\n');
+    for (final line in lines) {
+      if (line.startsWith('version:')) clientVersion = line.split(':')[1].trim();
+      if (line.startsWith('deploymentTime:')) clientDeploymentTime = DateTime.tryParse(line.split(':')[1].trim());
+      if (line.startsWith('gitCommit:')) clientGitVersion = line.split(':')[1].trim();
     }
+    setState(() {
+      _systemInfoDto = SystemInfoDto(
+        clientVersion: clientVersion,
+        clientDeploymentTime: clientDeploymentTime,
+        clientGitVersion: clientGitVersion,
+        // You can set other fields to empty/default here; server info will be filled later
+        databaseProvider: '',
+        databaseConnectionString: '',
+        efCoreVersion: '',
+        aspNetVersion: '',
+        serverIp: '',
+        clientIp: '',
+        serverTime: DateTime.now( ),
+        serverVersion: '',
+        serverDeploymentTime: null,
+        serverGitVersion: '',
+      );
+    });
+  } catch (e) {
+    setState(() {
+      _systemInfoDto = SystemInfoDto(
+        clientVersion: 'local debug',
+        clientDeploymentTime: null,
+        clientGitVersion: '',
+        databaseProvider: '',
+        databaseConnectionString: '',
+        efCoreVersion: '',
+        aspNetVersion: '',
+        serverIp: '',
+        clientIp: '',
+        serverTime: DateTime.now(),
+        serverVersion: '',
+        serverDeploymentTime: null,
+        serverGitVersion: '',
+      );
+    });
   }
+}
 
   void _showLoginDialog(BuildContext context) {
     showDialog(
@@ -101,7 +139,7 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  void _showSystemInfoDialog(BuildContext context, dynamic info) {
+  void _showSystemInfoDialog(BuildContext context, SystemInfoDto info) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -117,6 +155,12 @@ class _MyAppState extends State<MyApp> {
             Text('Server IP: ${info.serverIp}'),
             Text('Client IP: ${info.clientIp}'),
             Text('Server Time: ${info.serverTime}'),
+            Text('Server Version: ${info.serverVersion}'),
+            Text('Server Deployment Time: ${info.serverDeploymentTime != null ? info.serverDeploymentTime!.toIso8601String() : "-"}'),
+            Text('Server Git Version: ${info.serverGitVersion}'),
+            Text('Client Version: ${info.clientVersion}'),
+            Text('Client Deployment Time: ${info.clientDeploymentTime != null ? info.clientDeploymentTime!.toIso8601String() : "-"}'),
+            Text('Client Git Version: ${info.clientGitVersion}'),
           ],
         ),
         actions: [
@@ -133,8 +177,26 @@ class _MyAppState extends State<MyApp> {
     final response = await AuthHttpService.get(Uri.parse(ApiEndpoints.adminInfo));
     if (!mounted) return;
     if (response.statusCode == 200) {
-      final info = SystemInfoDto.fromJson(jsonDecode(response.body));
-      _showSystemInfoDialog(context, info);
+      final serverInfo = SystemInfoDto.fromJson(jsonDecode(response.body));
+      setState(() {
+        // Merge server info into _systemInfoDto, keep client info
+        _systemInfoDto = SystemInfoDto(
+          clientVersion: _systemInfoDto?.clientVersion ?? '',
+          clientDeploymentTime: _systemInfoDto?.clientDeploymentTime,
+          clientGitVersion: _systemInfoDto?.clientGitVersion ?? '',
+          databaseProvider: serverInfo.databaseProvider,
+          databaseConnectionString: serverInfo.databaseConnectionString,
+          efCoreVersion: serverInfo.efCoreVersion,
+          aspNetVersion: serverInfo.aspNetVersion,
+          serverIp: serverInfo.serverIp,
+          clientIp: serverInfo.clientIp,
+          serverTime: serverInfo.serverTime,
+          serverVersion: serverInfo.serverVersion,
+          serverDeploymentTime: serverInfo.serverDeploymentTime,
+          serverGitVersion: serverInfo.serverGitVersion,
+        );
+      });
+      _showSystemInfoDialog(context, _systemInfoDto!);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Fehler beim Laden der Systeminfo')),
@@ -150,7 +212,7 @@ class _MyAppState extends State<MyApp> {
       home: Scaffold(
         appBar: AppBar(
           title: Text(
-            'Memory Puzzle Test${_deploymentText.isNotEmpty ? " - $_deploymentText" : ""}',
+            'Memory Puzzle Test${_systemInfoDto != null && _systemInfoDto!.clientVersion.isNotEmpty ? " - ${_systemInfoDto!.clientVersion}" : ""}',
           ),
           actions: [
             AppBarActions(

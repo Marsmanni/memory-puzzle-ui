@@ -8,16 +8,21 @@ $remoteFolder = "/webseiten/domains/_rotblaugelb/_rotrotrot/memory/"
 # Path to WinSCP.com (update if installed elsewhere)
 $winscpExe = "C:\Program Files (x86)\WinSCP\WinSCP.com"
 
-# --- NEW CODE TO CREATE deployment.txt ---
-# Get the current date and time in YYYYMMDDHHmmss format
 $timestamp = Get-Date -Format "yyyyMMddHHmmss"
+$version = "1.2.3" # Set your version here, or read from a file
+$gitCommit = "abcdef123456" # Set your git commit here, or read from a file
 
 # Ensure the 'assets' directory exists
 $assetsPath = Join-Path $localFolder "assets/assets"
 New-Item -Path $assetsPath -ItemType Directory -Force | Out-Null
 
-# Create the deployment.txt file with the timestamp
-Set-Content -Path (Join-Path $assetsPath "deployment.txt") -Value $timestamp
+# Create the deployment.txt file with version, deploymentTime, and gitCommit
+$deploymentInfo = @"
+version: $version
+deploymentTime: $timestamp
+gitCommit: $gitCommit
+"@
+Set-Content -Path (Join-Path $assetsPath "deployment.txt") -Value $deploymentInfo
 # ----------------------------------------
 
 # Create a temporary WinSCP script file
