@@ -8,7 +8,7 @@ import '../utils/api_endpoints.dart';
 import '../utils/app_localizations.dart';
 import '../utils/constants.dart';
 import '../widgets/play_page_app_bar.dart';
-import 'puzzle_card.dart';
+import '../widgets/puzzle_card.dart';
 
 class PlayPage extends StatefulWidget {
   const PlayPage({super.key});

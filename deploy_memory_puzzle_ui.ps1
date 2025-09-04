@@ -10,7 +10,7 @@ $winscpExe = "C:\Program Files (x86)\WinSCP\WinSCP.com"
 
 $timestamp = Get-Date -Format "yyyyMMddHHmmss"
 $version = "1.2.3" # Set your version here, or read from a file
-$gitCommit = "abcdef123456" # Set your git commit here, or read from a file
+$gitCommit = git log -1 --pretty=format:"%h %ad %s" --date=format:"%H:%M %d.%m.%Y"
 
 # Ensure the 'assets' directory exists
 $assetsPath = Join-Path $localFolder "assets/assets"
