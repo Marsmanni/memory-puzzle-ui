@@ -1,4 +1,9 @@
-﻿# Set your FTP credentials and paths
+﻿flutter clean
+
+flutter build web
+
+
+# Set your FTP credentials and paths
 $ftpHost = "ftp.tectrics.de"
 $ftpUser = "298260-ftp"
 $ftpPass = $env:FTP_PASS
