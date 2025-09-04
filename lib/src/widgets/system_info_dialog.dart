@@ -15,18 +15,28 @@ class SystemInfoDialog extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Database group
+          const Text('Database', style: TextStyle(fontWeight: FontWeight.bold)),
           Text('Database Provider: ${info.databaseProvider}'),
           Text('Connection String: ${info.databaseConnectionString}'),
+          const Divider(),
+
+          // Server group
+          const Text('Server', style: TextStyle(fontWeight: FontWeight.bold)),
           Text('EF Core Version: ${info.efCoreVersion}'),
           Text('ASP.NET Version: ${info.aspNetVersion}'),
           Text('Server IP: ${info.serverIp}'),
-          Text('Client IP: ${info.clientIp}'),
           Text('Server Time: ${info.serverTime}'),
           Text('Server Version: ${info.serverVersion}'),
           Text(
             'Server Deployment Time: ${info.serverDeploymentTime != null ? info.serverDeploymentTime!.toIso8601String() : "-"}',
           ),
           Text('Server Git Version: ${info.serverGitVersion}'),
+          const Divider(),
+
+          // Client group
+          const Text('Client', style: TextStyle(fontWeight: FontWeight.bold)),
+          Text('Client IP: ${info.clientIp}'),
           Text('Client Version: ${info.clientVersion}'),
           Text(
             'Client Deployment Time: ${info.clientDeploymentTime != null ? info.clientDeploymentTime!.toIso8601String() : "-"}',

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import '../../main.dart'; // For AuthInfo
+import '../services/auth_helper.dart';
 import '../utils/app_localizations.dart';
+
 
 class AppBarActions extends StatelessWidget {
   final AuthInfo auth;
   final void Function(BuildContext) showLoginDialog;
   final void Function() logout;
-  final void Function(BuildContext, dynamic) showSystemInfoDialog;
+  final void Function(BuildContext) showSystemInfoDialog;
   final int selectedIndex;
   final void Function(int) setSelectedIndex;
 
@@ -102,7 +103,7 @@ class AppBarActions extends StatelessWidget {
                 } else if (value == 'users') {
                   setSelectedIndex(3);
                 } else if (value == 'systemInfo') {
-                  showSystemInfoDialog(context, null);
+                  showSystemInfoDialog(context);
                 }
               },
             ),

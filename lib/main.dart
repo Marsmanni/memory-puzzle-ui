@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'src/pages/create_page.dart';
 import 'src/pages/image_cropper_page.dart';
@@ -12,6 +11,7 @@ import 'src/utils/constants.dart';
 import 'src/widgets/app_bar_actions.dart';
 import 'src/widgets/login_dialog.dart';
 import 'src/widgets/system_info_dialog.dart';
+import 'src/services/auth_helper.dart';
 
 /// Entry point of the application
 void main() {
@@ -32,16 +32,8 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class AuthInfo {
-  String? jwt;
-  String? role;
-  String? user;
-
-  AuthInfo({this.jwt, this.role, this.user});
-}
-
 class _MyAppState extends State<MyApp> {
-  AuthInfo _auth = AuthInfo();
+  AuthInfo _authInfo = AuthInfo();
 
   @override
   void initState() {
@@ -50,27 +42,25 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> _loadJwt() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _auth = AuthInfo(
-        jwt: prefs.getString('jwt'),
-        role: prefs.getString('role'),
-        user: prefs.getString('user'),
-      );
-    });
+    await AuthHelper.setAuthState(this, (auth) => _authInfo = auth);
   }
 
   Future<void> _showLoginDialog(BuildContext context) async {
     showDialog(
       context: context,
       builder: (ctx) => LoginDialog(
-        onLoginSuccess: (jwt, role, user) {
+        onLoginSuccess: (authInfo) async {
+          await AuthHelper.saveAuthInfo(authInfo);
           setState(() {
-            _auth = AuthInfo(jwt: jwt, role: role, user: user);
+            _authInfo = authInfo;
           });
         },
       ),
     );
+  }
+
+  void _logout() async {
+    await AuthHelper.clearAuthInfo(this, (auth) => _authInfo = auth);
   }
 
   Future<void> _showInfoDialog(BuildContext context) async {
@@ -90,16 +80,6 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  void _logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('jwt');
-    await prefs.remove('role');
-    await prefs.remove('user');
-    setState(() {
-      _auth = AuthInfo();
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -110,10 +90,10 @@ class _MyAppState extends State<MyApp> {
           title: Text('Wunderwelt Memory'),
           actions: [
             AppBarActions(
-              auth: _auth,
+              auth: _authInfo,
               showLoginDialog: (context) => _showLoginDialog(context),
               logout: _logout,
-              showSystemInfoDialog: (context, _) => _showInfoDialog(context),
+              showSystemInfoDialog: (context) => _showInfoDialog(context),
               selectedIndex: _selectedIndex,
               setSelectedIndex: (i) => setState(() => _selectedIndex = i),
             ),
@@ -136,8 +116,8 @@ class _MyAppState extends State<MyApp> {
 
     // Image upload/crop page: only for authenticated writers or admins
     if (_selectedIndex == 1) {
-      if (_auth.jwt != null &&
-          (_auth.role == 'writer' || _auth.role == 'admin')) {
+      if (_authInfo.jwt != null &&
+          (_authInfo.role == 'writer' || _authInfo.role == 'admin')) {
         return const ImageCropperPage();
       }
       return const Center(child: Text('Login required to upload.'));
@@ -145,8 +125,8 @@ class _MyAppState extends State<MyApp> {
 
     // Create page: only for authenticated writers or admins
     if (_selectedIndex == 2) {
-      if (_auth.jwt != null &&
-          (_auth.role == 'writer' || _auth.role == 'admin')) {
+      if (_authInfo.jwt != null &&
+          (_authInfo.role == 'writer' || _authInfo.role == 'admin')) {
         return const CreatePage();
       }
       return const Center(child: Text('Login required to play.'));
@@ -154,7 +134,7 @@ class _MyAppState extends State<MyApp> {
 
     // Users admin page: only for authenticated admins
     if (_selectedIndex == 3) {
-      if (_auth.jwt != null && _auth.role == 'admin') {
+      if (_authInfo.jwt != null && _authInfo.role == 'admin') {
         return const UsersPage();
       }
       return const Center(child: Text('Admin access required for user admin.'));

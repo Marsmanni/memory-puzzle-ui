@@ -1,23 +1,26 @@
-import 'package:flutter_application_2/src/utils/api_endpoints.dart';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
+import '../utils/api_endpoints.dart';
+import '../utils/log.dart';
+import 'auth_helper.dart'; // <-- Add this import
+
 // Only import dart:io on non-web platforms
 // ignore: avoid_web_libraries_in_flutter
 // Use conditional import for file saving
 import 'file_saver_stub.dart' if (dart.library.io) 'file_saver_io.dart';
-import 'dart:typed_data';
-import 'dart:ui' as ui;
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import '../utils/log.dart';
 
 /// Service class for handling image cropping operations
 class ImageCropService {
   /// Helper to upload image bytes (Uint8List) to endpoint for web
   static Future<dynamic> uploadImageBytesToEndpoint({
-  required String filegroup,
-  required Uint8List imageBytes,
+    required String filegroup,
+    required Uint8List imageBytes,
   }) async {
     try {
       final uri = Uri.parse(ApiEndpoints.imagesUpload);
@@ -31,12 +34,8 @@ class ImageCropService {
         ),
       );
       request.fields['filegroup'] = filegroup;
-      // Fetch JWT from SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      final jwt = prefs.getString('jwt');
-      if (jwt != null && jwt.isNotEmpty) {
-        request.headers['Authorization'] = 'Bearer $jwt';
-      }
+      // Use AuthHelper to add JWT header
+      await AuthHelper.addAuthHeader(request.headers);
       final streamedResponse = await request.send();
       final responseBody = await streamedResponse.stream.bytesToString();
       return {

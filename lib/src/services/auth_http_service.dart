@@ -1,43 +1,34 @@
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
+import 'auth_helper.dart';
+
 class AuthHttpService {
-  /// Performs an authenticated GET request with JWT from SharedPreferences.
+  /// Performs an authenticated GET request with JWT 
   static Future<http.Response> get(Uri url) async {
-    final prefs = await SharedPreferences.getInstance();
-    final jwt = prefs.getString('jwt');
-    return await http.get(
-      url,
-      headers: {
-        if (jwt != null) 'Authorization': 'Bearer $jwt',
-      },
-    );
+    final headers = <String, String>{};
+    await AuthHelper.addAuthHeader(headers);
+    return await http.get(url, headers: headers);
   }
 
-  /// Performs an authenticated GET request with JWT from SharedPreferences.
+  /// Performs an authenticated POST request with JWT
   static Future<http.Response> post(Uri url, Object payload) async {
-    final prefs = await SharedPreferences.getInstance();
-    final jwt = prefs.getString('jwt');
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    await AuthHelper.addAuthHeader(headers);
     return await http.post(
       url,
-      headers: {
-        'Content-Type': 'application/json',
-         if (jwt != null) 'Authorization': 'Bearer $jwt',
-      },
+      headers: headers,
       body: jsonEncode(payload),
     );
   }
 
-   static Future<http.Response> put(Uri url, Object payload) async {
-    final prefs = await SharedPreferences.getInstance();
-    final jwt = prefs.getString('jwt');
+  /// Performs an authenticated PUT request with JWT 
+  static Future<http.Response> put(Uri url, Object payload) async {
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    await AuthHelper.addAuthHeader(headers);
     return await http.put(
       url,
-      headers: {
-        'Content-Type': 'application/json',
-         if (jwt != null) 'Authorization': 'Bearer $jwt',
-      },
+      headers: headers,
       body: jsonEncode(payload),
     );
   }
