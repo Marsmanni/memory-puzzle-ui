@@ -70,7 +70,7 @@ class PuzzleAdminDto {
     'id': id,
     'name': name,
     'creator': creator,
-    'creationTime': creationTime != null ? creationTime.toIso8601String() : null,
+    'creationTime': creationTime.toIso8601String(),
     'imageCount': imageCount,
     'isPublic': isPublic,
   };
@@ -127,7 +127,7 @@ class PuzzleDto {
 
   Map<String, dynamic> toJson() => {
     'id': id,
-    'creationTime': creationTime != null ? creationTime.toIso8601String() : null,
+    'creationTime': creationTime.toIso8601String(),
     'author': author,
     'authorRole': authorRole,
     'isPublic': isPublic,
@@ -181,8 +181,8 @@ class PuzzleLogDto {
   Map<String, dynamic> toJson() => {
     'puzzleId': puzzleId,
     'user': user,
-    'startTime': startTime != null ? startTime.toIso8601String() : null,
-    'endTime': endTime != null ? endTime.toIso8601String() : null,
+    'startTime': startTime.toIso8601String(),
+    'endTime': endTime.toIso8601String(),
     'mode': mode,
     'comment': comment,
   };
@@ -242,6 +242,7 @@ class SystemInfoDto {
   String clientVersion;
   DateTime? clientDeploymentTime;
   String clientGitVersion;
+  String adminDecryptionKeyClient;
 
   SystemInfoDto({
     required this.databaseProvider,
@@ -257,6 +258,7 @@ class SystemInfoDto {
     required this.clientVersion,
     this.clientDeploymentTime,
     required this.clientGitVersion,
+    required this.adminDecryptionKeyClient,
   });
 
   factory SystemInfoDto.fromJson(Map<String, dynamic> json) => SystemInfoDto(
@@ -273,6 +275,7 @@ class SystemInfoDto {
     clientVersion: json['clientVersion'] ?? '',
     clientDeploymentTime: json['clientDeploymentTime'] != null ? DateTime.parse(json['clientDeploymentTime']) : null,
     clientGitVersion: json['clientGitVersion'] ?? '',
+    adminDecryptionKeyClient: json['adminDecryptionKeyClient'] ?? '',
   );
 
   Map<String, dynamic> toJson() => {
@@ -282,13 +285,14 @@ class SystemInfoDto {
     'aspNetVersion': aspNetVersion,
     'serverIp': serverIp,
     'clientIp': clientIp,
-    'serverTime': serverTime != null ? serverTime.toIso8601String() : null,
+    'serverTime': serverTime.toIso8601String(),
     'serverVersion': serverVersion,
-    'serverDeploymentTime': serverDeploymentTime != null ? serverDeploymentTime?.toIso8601String() : null,
+    'serverDeploymentTime': serverDeploymentTime?.toIso8601String(),
     'serverGitVersion': serverGitVersion,
     'clientVersion': clientVersion,
-    'clientDeploymentTime': clientDeploymentTime != null ? clientDeploymentTime?.toIso8601String() : null,
+    'clientDeploymentTime': clientDeploymentTime?.toIso8601String(),
     'clientGitVersion': clientGitVersion,
+    'adminDecryptionKeyClient': adminDecryptionKeyClient,
   };
 }
 
@@ -315,7 +319,7 @@ class UserAdminDto {
   Map<String, dynamic> toJson() => {
     'username': username,
     'roles': roles,
-    'lastLogin': lastLogin != null ? lastLogin?.toIso8601String() : null,
+    'lastLogin': lastLogin?.toIso8601String(),
     'puzzleCount': puzzleCount,
   };
 }

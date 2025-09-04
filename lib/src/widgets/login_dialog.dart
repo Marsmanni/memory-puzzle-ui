@@ -19,7 +19,7 @@ Map<String, dynamic> parseJwt(String token) {
 
 class LoginDialog extends StatefulWidget {
   final void Function(String jwt, String role, String user)? onLoginSuccess;
-  const LoginDialog({Key? key, this.onLoginSuccess}) : super(key: key);
+  const LoginDialog({super.key, this.onLoginSuccess});
 
   @override
   State<LoginDialog> createState() => _LoginDialogState();
@@ -31,7 +31,7 @@ class _LoginDialogState extends State<LoginDialog> {
   bool _loading = false;
   String? _error;
 
-  Future<void> _login() async {
+  Future<void> _login(BuildContext context) async {
     setState(() {
       _loading = true;
       _error = null;
@@ -45,13 +45,12 @@ class _LoginDialogState extends State<LoginDialog> {
         'password': _passwordController.text,
       }),
     );
+    if (!mounted) return; // <-- Check after await
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       final jwt = data['token'] ?? data['jwt'] ?? '';
       final claims = parseJwt(jwt);
-      // After parsing claims
-      debugPrint('JWT claims: $claims'); // Add this for debugging
-
+      debugPrint('JWT claims: $claims');
       final role = claims['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ?? data['role'] ?? 'user';
       final user = claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] ?? data['user'] ?? _usernameController.text;
       final prefs = await SharedPreferences.getInstance();
@@ -59,12 +58,14 @@ class _LoginDialogState extends State<LoginDialog> {
       await prefs.setString('role', role);
       await prefs.setString('user', user);
       if (widget.onLoginSuccess != null) widget.onLoginSuccess!(jwt, role, user);
-      Navigator.of(context).pop();
+      if (!context.mounted) return; 
+      if (Navigator.canPop(context)) Navigator.of(context).pop();    
     } else {
       setState(() {
         _error = 'Login failed: ${response.statusCode}';
       });
     }
+    if (!mounted) return; // <-- Final check before last setState
     setState(() {
       _loading = false;
     });
@@ -99,7 +100,7 @@ class _LoginDialogState extends State<LoginDialog> {
           child: const Text('Cancel'),
         ),
         ElevatedButton(
-          onPressed: _loading ? null : _login,
+          onPressed: _loading ? null : () => _login(context),
           child: _loading ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : Text(AppLocalizations.get('login')),
         ),
       ],

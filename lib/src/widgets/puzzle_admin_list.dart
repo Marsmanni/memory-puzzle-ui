@@ -53,9 +53,11 @@ class PuzzleAdminList extends StatelessWidget {
             setState(() {
               puzzle.isPublic = !puzzle.isPublic;
             });
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(AppLocalizations.get('updateError'))),
-            );
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(AppLocalizations.get('updateError'))),
+              );
+            }
           }
         },
       )).toList(),

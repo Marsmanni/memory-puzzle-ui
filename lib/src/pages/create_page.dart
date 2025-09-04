@@ -207,15 +207,19 @@ class _CreatePageState extends State<CreatePage> {
                   puzzleDto.toJson(),
                 );
                 if (response.statusCode == 200 || response.statusCode == 201) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(AppLocalizations.get('saveSuccess'))),
-                  );
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(AppLocalizations.get('saveSuccess'))),
+                    );
+                  }
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(
-                      '${AppLocalizations.get('saveFailed')}: ${response.statusCode}',
-                    )),
-                  );
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(
+                        '${AppLocalizations.get('saveFailed')}: ${response.statusCode}',
+                      )),
+                    );
+                  }
                 }
               },
               child: Text(AppLocalizations.get('saveTo')),

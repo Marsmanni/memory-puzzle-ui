@@ -13,7 +13,7 @@ class ImageCropperOverlayPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     // Define the overall semi-transparent background paint
     final backgroundPaint = Paint()
-      ..color = Colors.black.withOpacity(AppConstants.overlayOpacity);
+      ..color = Color.fromRGBO(0, 0, 0, AppConstants.overlayOpacity);
 
     // Define the border paint for the crop square
     final borderPaint = Paint()

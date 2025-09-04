@@ -3,6 +3,23 @@
 flutter build web
 
 
+function Encrypt-Text {
+    param (
+        [string]$PlainText,
+        [string]$Key
+    )
+    $aes = [System.Security.Cryptography.Aes]::Create()
+    $aes.Key = [System.Text.Encoding]::UTF8.GetBytes($Key.PadRight(32).Substring(0,32))
+    $aes.IV = [byte[]](1..16)
+    $encryptor = $aes.CreateEncryptor()
+    $plainBytes = [System.Text.Encoding]::UTF8.GetBytes($PlainText)
+    $encryptedBytes = $encryptor.TransformFinalBlock($plainBytes, 0, $plainBytes.Length)
+    [Convert]::ToBase64String($encryptedBytes)
+}
+
+# Set your encryption key (must be 32 chars for AES-256)
+$encryptionKey = "ThisIsMySuperSecretKeyLOL123"
+
 # Set your FTP credentials and paths
 $ftpHost = "ftp.tectrics.de"
 $ftpUser = "298260-ftp"
@@ -27,7 +44,10 @@ version: $version
 deploymentTime: $timestamp
 gitCommit: $gitCommit
 "@
-Set-Content -Path (Join-Path $assetsPath "deployment.txt") -Value $deploymentInfo
+
+$encryptedInfo = Encrypt-Text -PlainText $deploymentInfo -Key $encryptionKey
+
+Set-Content -Path (Join-Path $assetsPath "deployment.txt") -Value $encryptedInfo
 # ----------------------------------------
 
 # Create a temporary WinSCP script file

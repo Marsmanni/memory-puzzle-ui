@@ -190,7 +190,7 @@ class PlayPageLoadingOverlay extends StatelessWidget {
     if (!loading) return const SizedBox.shrink();
     return Positioned.fill(
       child: Container(
-        color: Colors.black.withOpacity(0.6),
+        color: const Color.fromRGBO(0, 0, 0, 0.6),
         child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,

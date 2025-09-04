@@ -1,20 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_application_2/src/widgets/app_bar_actions.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'src/pages/create_page.dart';
 import 'src/pages/image_cropper_page.dart';
 import 'src/pages/play_page.dart';
-import 'src/pages/create_page.dart';
 import 'src/pages/users_page.dart';
-import 'src/utils/app_localizations.dart';
-import 'src/widgets/login_dialog.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'src/services/game_manager.dart';
+import 'src/services/system_info_service.dart';
 import 'src/utils/constants.dart';
-import 'dart:convert';
-import 'package:flutter_application_2/src/services/auth_http_service.dart';
-import 'package:flutter_application_2/src/utils/api_endpoints.dart';
-import 'package:flutter_application_2/src/dtos/api_dtos.dart';
-import 'package:flutter_application_2/src/services/game_manager.dart';
-import 'package:provider/provider.dart';
+import 'src/widgets/app_bar_actions.dart';
+import 'src/widgets/login_dialog.dart';
+import 'src/widgets/system_info_dialog.dart';
 
 /// Entry point of the application
 void main() {
@@ -45,13 +42,11 @@ class AuthInfo {
 
 class _MyAppState extends State<MyApp> {
   AuthInfo _auth = AuthInfo();
-  SystemInfoDto? _systemInfoDto; // <-- new field
 
   @override
   void initState() {
     super.initState();
     _loadJwt();
-    _loadDeploymentText();
   }
 
   Future<void> _loadJwt() async {
@@ -65,58 +60,7 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  Future<void> _loadDeploymentText() async {
-  try {
-    final text = await rootBundle.loadString('assets/deployment.txt');
-    String clientVersion = '';
-    DateTime? clientDeploymentTime;
-    String clientGitVersion = '';
-    final lines = text.trim().split('\n');
-    for (final line in lines) {
-      if (line.startsWith('version:')) clientVersion = line.split(':')[1].trim();
-      if (line.startsWith('deploymentTime:')) clientDeploymentTime = DateTime.tryParse(line.split(':')[1].trim());
-      if (line.startsWith('gitCommit:')) clientGitVersion = line.split(':')[1].trim();
-    }
-    setState(() {
-      _systemInfoDto = SystemInfoDto(
-        clientVersion: clientVersion,
-        clientDeploymentTime: clientDeploymentTime,
-        clientGitVersion: clientGitVersion,
-        // You can set other fields to empty/default here; server info will be filled later
-        databaseProvider: '',
-        databaseConnectionString: '',
-        efCoreVersion: '',
-        aspNetVersion: '',
-        serverIp: '',
-        clientIp: '',
-        serverTime: DateTime.now( ),
-        serverVersion: '',
-        serverDeploymentTime: null,
-        serverGitVersion: '',
-      );
-    });
-  } catch (e) {
-    setState(() {
-      _systemInfoDto = SystemInfoDto(
-        clientVersion: 'local debug',
-        clientDeploymentTime: null,
-        clientGitVersion: '',
-        databaseProvider: '',
-        databaseConnectionString: '',
-        efCoreVersion: '',
-        aspNetVersion: '',
-        serverIp: '',
-        clientIp: '',
-        serverTime: DateTime.now(),
-        serverVersion: '',
-        serverDeploymentTime: null,
-        serverGitVersion: '',
-      );
-    });
-  }
-}
-
-  void _showLoginDialog(BuildContext context) {
+  Future<void> _showLoginDialog(BuildContext context) async {
     showDialog(
       context: context,
       builder: (ctx) => LoginDialog(
@@ -129,6 +73,23 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
+  Future<void> _showInfoDialog(BuildContext context) async {
+    try {
+      final systemInfoService = SystemInfoService();
+      final info = await systemInfoService.getCombinedSystemInfo();
+      if (!context.mounted) return;
+      showDialog(
+        context: context,
+        builder: (ctx) => SystemInfoDialog(info: info),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to load system info: $e')));
+    }
+  }
+
   void _logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('jwt');
@@ -139,71 +100,6 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  void _showSystemInfoDialog(BuildContext context, SystemInfoDto info) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(AppLocalizations.get('systemInfo')),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Database Provider: ${info.databaseProvider}'),
-            Text('Connection String: ${info.databaseConnectionString}'),
-            Text('EF Core Version: ${info.efCoreVersion}'),
-            Text('ASP.NET Version: ${info.aspNetVersion}'),
-            Text('Server IP: ${info.serverIp}'),
-            Text('Client IP: ${info.clientIp}'),
-            Text('Server Time: ${info.serverTime}'),
-            Text('Server Version: ${info.serverVersion}'),
-            Text('Server Deployment Time: ${info.serverDeploymentTime != null ? info.serverDeploymentTime!.toIso8601String() : "-"}'),
-            Text('Server Git Version: ${info.serverGitVersion}'),
-            Text('Client Version: ${info.clientVersion}'),
-            Text('Client Deployment Time: ${info.clientDeploymentTime != null ? info.clientDeploymentTime!.toIso8601String() : "-"}'),
-            Text('Client Git Version: ${info.clientGitVersion}'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> fetchAndShowSystemInfo(BuildContext context) async {
-    final response = await AuthHttpService.get(Uri.parse(ApiEndpoints.adminInfo));
-    if (!mounted) return;
-    if (response.statusCode == 200) {
-      final serverInfo = SystemInfoDto.fromJson(jsonDecode(response.body));
-      setState(() {
-        // Merge server info into _systemInfoDto, keep client info
-        _systemInfoDto = SystemInfoDto(
-          clientVersion: _systemInfoDto?.clientVersion ?? '',
-          clientDeploymentTime: _systemInfoDto?.clientDeploymentTime,
-          clientGitVersion: _systemInfoDto?.clientGitVersion ?? '',
-          databaseProvider: serverInfo.databaseProvider,
-          databaseConnectionString: serverInfo.databaseConnectionString,
-          efCoreVersion: serverInfo.efCoreVersion,
-          aspNetVersion: serverInfo.aspNetVersion,
-          serverIp: serverInfo.serverIp,
-          clientIp: serverInfo.clientIp,
-          serverTime: serverInfo.serverTime,
-          serverVersion: serverInfo.serverVersion,
-          serverDeploymentTime: serverInfo.serverDeploymentTime,
-          serverGitVersion: serverInfo.serverGitVersion,
-        );
-      });
-      _showSystemInfoDialog(context, _systemInfoDto!);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Fehler beim Laden der Systeminfo')),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -211,15 +107,13 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: true,
       home: Scaffold(
         appBar: AppBar(
-          title: Text(
-            'Memory Puzzle Test${_systemInfoDto != null && _systemInfoDto!.clientVersion.isNotEmpty ? " - ${_systemInfoDto!.clientVersion}" : ""}',
-          ),
+          title: Text('Wunderwelt Memory'),
           actions: [
             AppBarActions(
               auth: _auth,
-              showLoginDialog: _showLoginDialog,
+              showLoginDialog: (context) => _showLoginDialog(context),
               logout: _logout,
-              showSystemInfoDialog: (context, _) => fetchAndShowSystemInfo(context), // <-- use the new method
+              showSystemInfoDialog: (context, _) => _showInfoDialog(context),
               selectedIndex: _selectedIndex,
               setSelectedIndex: (i) => setState(() => _selectedIndex = i),
             ),
@@ -242,7 +136,8 @@ class _MyAppState extends State<MyApp> {
 
     // Image upload/crop page: only for authenticated writers or admins
     if (_selectedIndex == 1) {
-      if (_auth.jwt != null && (_auth.role == 'writer' || _auth.role == 'admin')) {
+      if (_auth.jwt != null &&
+          (_auth.role == 'writer' || _auth.role == 'admin')) {
         return const ImageCropperPage();
       }
       return const Center(child: Text('Login required to upload.'));
@@ -250,7 +145,8 @@ class _MyAppState extends State<MyApp> {
 
     // Create page: only for authenticated writers or admins
     if (_selectedIndex == 2) {
-      if (_auth.jwt != null && (_auth.role == 'writer' || _auth.role == 'admin')) {
+      if (_auth.jwt != null &&
+          (_auth.role == 'writer' || _auth.role == 'admin')) {
         return const CreatePage();
       }
       return const Center(child: Text('Login required to play.'));
