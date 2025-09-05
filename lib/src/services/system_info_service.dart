@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'package:encrypt/encrypt.dart' as encrypt;
 import 'package:flutter/services.dart';
-import 'package:flutter/material.dart';
 
 import '../dtos/api_dtos.dart';
 import '../services/auth_http_service.dart';
 import '../utils/api_endpoints.dart';
+import '../utils/log.dart';
 
 Future<String> decryptDeploymentText(String encryptedText, String key) async {
   final keyBytes = encrypt.Key.fromUtf8(key.padRight(32).substring(0, 32));
@@ -76,7 +76,7 @@ class SystemInfoService {
       serverInfo.clientGitVersion = clientInfo.gitCommit;
       return serverInfo;
     } on Exception catch (e) {
-      debugPrint("Failed to get system info: $e");
+      Log.e("Failed to get system info: $e");
       throw SystemInfoException('Could not retrieve system information. Please try again.');
     }
   }
@@ -101,7 +101,7 @@ class SystemInfoService {
     try {
       encryptedText = (await rootBundle.loadString('assets/deployment.txt')).trim();
     } catch (e) {
-      debugPrint('Could not load deployment.txt, using fallback.');
+      Log.e('Could not load deployment.txt, using fallback.');
       return clientDeploymentInfoMissing;
     }
 
@@ -109,7 +109,7 @@ class SystemInfoService {
     try {
       decryptedText = await decryptDeploymentText(encryptedText, decryptionKey);
     } catch (e) {
-      debugPrint("Decryption failed, using fallback decrypted text: $e");
+      Log.e("Decryption failed, using fallback decrypted text: $e");
       return clientDeploymentInfoMissing;
     }
 

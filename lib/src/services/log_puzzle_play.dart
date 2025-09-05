@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
-
 import '../dtos/api_dtos.dart';
 import '../services/auth_http_service.dart';
 import '../utils/api_endpoints.dart';
+import '../utils/log.dart'; 
 
 // Call this when ending play (e.g., when the puzzle is solved or user exits)
 Future<void> logPuzzlePlay({
@@ -38,12 +37,11 @@ Future<void> logPuzzlePlay({
       logDto.toJson(),
     );
     if (response.statusCode == 200 || response.statusCode == 201) {
-      // Log success
-      debugPrint('Puzzle play logged successfully.');
+      Log.i('Puzzle play logged successfully.');
     } else {
-      debugPrint('Failed to log puzzle play: ${response.statusCode}');
+      Log.w('Failed to log puzzle play: ${response.statusCode}');
     }
   } catch (e) {
-    debugPrint('Error logging puzzle play: $e');
+    Log.e('Error logging puzzle play: $e');
   }
 }

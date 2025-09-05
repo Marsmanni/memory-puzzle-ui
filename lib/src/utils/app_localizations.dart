@@ -3,6 +3,13 @@ class AppLocalizations {
 
   static final Map<String, Map<String, String>> _localizedValues = {
     'de': {
+      // Main
+      'main.loginRequiredUpload': 'Login erforderlich zum Hochladen.',
+      'main.loginRequiredCompose': 'Login erforderlich zum Erstellen von Erinnerungen.',
+      'main.adminRequiredUserAdmin': 'Admin-Zugriff für Benutzerverwaltung erforderlich.',
+      'main.failedToLoadSystemInfo': 'Systeminfo konnte nicht geladen werden: {error},',
+      'app.title': 'Wunderwelt Memory',
+
       // Users Page
       'usersPage.title': 'Administrator-Übersicht ',
       'usersPage.puzzles': 'Puzzles',
@@ -25,6 +32,7 @@ class AppLocalizations {
       'playPage.settings': 'Einstellungen',
       'playPage.selectPlaceholder': 'Platzhalter auswählen',
       'playPage.language': 'Sprache',
+      'playPage.backendNotAvailable': 'Backend nicht verfügbar.',
 
       // Widgets
       'userAdminCard.puzzles': 'Puzzles',
@@ -107,8 +115,17 @@ ERWEITERTE STEUERUNG:
       'cropperPage.currentScale': 'Aktueller Maßstab: {scale}',
       'cropperPage.currentOffset': 'Aktuelle Position: ({dx}, {dy})',
       'cropperPage.imageSize': 'Bildgröße: {width} x {height}',
+      'cropperPage.errorLoadAssetImage': 'Asset-Bild konnte nicht geladen werden: {error}',
+      'cropperPage.errorSaveImageParts': 'Bild konnte nicht in vier Teilen gespeichert werden: {error}',
     },
     'en': {
+      // Main
+      'main.loginRequiredUpload': 'Login required to upload.',
+      'main.loginRequiredCompose': 'Login required to compose memories.',
+      'main.adminRequiredUserAdmin': 'Admin access required for user admin.',
+      'main.failedToLoadSystemInfo': 'Failed to load system info: {error},',
+      'app.title': 'Wunderwelt Memory',
+
       // Users Page
       'usersPage.title': 'All Users',
       'usersPage.puzzles': 'Puzzles',
@@ -131,6 +148,7 @@ ERWEITERTE STEUERUNG:
       'playPage.settings': 'Settings',
       'playPage.selectPlaceholder': 'Select Placeholder',
       'playPage.language': 'Language',
+      'playPage.backendNotAvailable': 'Backend not available.',
 
       // Widgets
       'userAdminCard.puzzles': 'Puzzles',
@@ -213,6 +231,8 @@ ENHANCED CONTROLS:
       'cropperPage.currentScale': 'Current scale: {scale}',
       'cropperPage.currentOffset': 'Current offset: ({dx}, {dy})',
       'cropperPage.imageSize': 'Image size: {width} x {height}',
+      'cropperPage.errorLoadAssetImage': 'Failed to load asset image: {error}',
+      'cropperPage.errorSaveImageParts': 'Failed to save image in four parts: {error}',
     },
   };
 

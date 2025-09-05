@@ -1,5 +1,4 @@
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter/material.dart';
 
 class AuthInfo {
   final String? jwt;
@@ -25,17 +24,14 @@ class AuthHelper {
     return prefs.getString('jwt');
   }
 
-  /// Loads AuthInfo from SharedPreferences and sets it in state.
-  static Future<void> setAuthState(State state, void Function(AuthInfo) setter) async {
+  /// Loads AuthInfo from SharedPreferences.
+  static Future<AuthInfo> getAuthInfo() async {
     final prefs = await SharedPreferences.getInstance();
-    final auth = AuthInfo(
+    return AuthInfo(
       jwt: prefs.getString('jwt'),
       role: prefs.getString('role'),
       user: prefs.getString('user'),
     );
-    if (state.mounted) {
-      state.setState(() => setter(auth));
-    }
   }
 
   /// Saves AuthInfo to SharedPreferences.
@@ -46,14 +42,11 @@ class AuthHelper {
     await prefs.setString('user', auth.user ?? '');
   }
 
-  /// Removes AuthInfo from SharedPreferences and resets state.
-  static Future<void> clearAuthInfo(State state, void Function(AuthInfo) setter) async {
+  /// Removes AuthInfo from SharedPreferences.
+  static Future<void> clearAuthInfo() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('jwt');
     await prefs.remove('role');
     await prefs.remove('user');
-    if (state.mounted) {
-      state.setState(() => setter(AuthInfo()));
-    }
   }
 }

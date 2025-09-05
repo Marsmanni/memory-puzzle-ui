@@ -5,13 +5,14 @@ import 'src/pages/create_page.dart';
 import 'src/pages/image_cropper_page.dart';
 import 'src/pages/play_page.dart';
 import 'src/pages/users_page.dart';
+import 'src/services/auth_helper.dart';
 import 'src/services/game_manager.dart';
 import 'src/services/system_info_service.dart';
+import 'src/utils/app_localizations.dart';
 import 'src/utils/constants.dart';
 import 'src/widgets/app_bar_actions.dart';
 import 'src/widgets/login_dialog.dart';
 import 'src/widgets/system_info_dialog.dart';
-import 'src/services/auth_helper.dart';
 
 /// Entry point of the application
 void main() {
@@ -42,7 +43,8 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> _loadJwt() async {
-    await AuthHelper.setAuthState(this, (auth) => _authInfo = auth);
+    final auth = await AuthHelper.getAuthInfo();
+    if (mounted) setState(() => _authInfo = auth);
   }
 
   Future<void> _showLoginDialog(BuildContext context) async {
@@ -60,7 +62,8 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _logout() async {
-    await AuthHelper.clearAuthInfo(this, (auth) => _authInfo = auth);
+    await AuthHelper.clearAuthInfo();
+    if (mounted) setState(() => _authInfo = AuthInfo());
   }
 
   Future<void> _showInfoDialog(BuildContext context) async {
@@ -76,7 +79,13 @@ class _MyAppState extends State<MyApp> {
       if (!context.mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Failed to load system info: $e')));
+      ).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.format('main.failedToLoadSystemInfo', { 'error': '$e'}),
+          ),
+        ),
+      );
     }
   }
 
@@ -87,7 +96,7 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: true,
       home: Scaffold(
         appBar: AppBar(
-          title: Text('Wunderwelt Memory'),
+          title: Text(AppLocalizations.get('app.title')), // Localized
           actions: [
             AppBarActions(
               auth: _authInfo,
@@ -109,38 +118,33 @@ class _MyAppState extends State<MyApp> {
   /// Returns the main content widget based on the selected navigation index and user authentication.
   /// Each page is protected according to the user's role and authentication status.
   Widget _buildBody() {
-    // Play page is always accessible
     if (_selectedIndex == 0) {
       return const PlayPage();
     }
 
-    // Image upload/crop page: only for authenticated writers or admins
     if (_selectedIndex == 1) {
       if (_authInfo.jwt != null &&
           (_authInfo.role == 'writer' || _authInfo.role == 'admin')) {
         return const ImageCropperPage();
       }
-      return const Center(child: Text('Login required to upload.'));
+      return Center(child: Text(AppLocalizations.get('main.loginRequiredUpload')));
     }
 
-    // Create page: only for authenticated writers or admins
     if (_selectedIndex == 2) {
       if (_authInfo.jwt != null &&
           (_authInfo.role == 'writer' || _authInfo.role == 'admin')) {
         return const CreatePage();
       }
-      return const Center(child: Text('Login required to play.'));
+      return Center(child: Text(AppLocalizations.get('main.loginRequiredCompose')));
     }
 
-    // Users admin page: only for authenticated admins
     if (_selectedIndex == 3) {
       if (_authInfo.jwt != null && _authInfo.role == 'admin') {
         return const UsersPage();
       }
-      return const Center(child: Text('Admin access required for user admin.'));
+      return Center(child: Text(AppLocalizations.get('main.adminRequiredUserAdmin')));
     }
 
-    // Fallback for unknown index
     return const SizedBox.shrink();
   }
 }

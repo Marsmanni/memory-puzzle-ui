@@ -47,19 +47,25 @@ class PlayPageAppBar extends StatelessWidget implements PreferredSizeWidget {
             Text(AppLocalizations.get('playPage.title')),
             const SizedBox(width: 16),
             DropdownButton<PuzzleDto>(
-              value: selectedPuzzleIndex >= 0 ? groups[selectedPuzzleIndex] : null,
-              items: List.generate(
-                groups.length,
-                (i) => DropdownMenuItem(
-                  value: groups[i],
-                  child: Text(groups[i].name),
-                ),
-              ),
-              onChanged: (value) {
-                if (value != null) {
-                  onPuzzleChanged(groups.indexOf(value));
-                }
-              },
+              value: (groups.isNotEmpty && selectedPuzzleIndex >= 0 && selectedPuzzleIndex < groups.length)
+                  ? groups[selectedPuzzleIndex]
+                  : null,
+              items: groups.isNotEmpty
+                  ? List.generate(
+                      groups.length,
+                      (i) => DropdownMenuItem(
+                        value: groups[i],
+                        child: Text(groups[i].name),
+                      ),
+                    )
+                  : [],
+              onChanged: groups.isNotEmpty
+                  ? (value) {
+                      if (value != null) {
+                        onPuzzleChanged(groups.indexOf(value));
+                      }
+                    }
+                  : null, // disables dropdown if empty
             ),
             const SizedBox(width: 16),
             ElevatedButton(

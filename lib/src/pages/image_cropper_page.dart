@@ -1,25 +1,27 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:ui' as ui;
+
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/gestures.dart';
-import 'package:flutter/foundation.dart';
-import 'package:file_picker/file_picker.dart';
-import 'dart:async';
-import 'dart:ui' as ui;
-import 'dart:convert';
+
+import '../dtos/api_dtos.dart';
 import '../models/image_transform_model.dart';
-import '../services/image_service.dart';
+import '../services/auth_http_service.dart';
 import '../services/image_crop_service.dart';
+import '../services/image_service.dart';
+import '../utils/api_endpoints.dart';
 import '../utils/app_localizations.dart';
+import '../utils/constants.dart';
+import '../utils/image_cropper_key_handler.dart';
+import '../utils/log.dart';
+import '../widgets/image_cropper_app_bar.dart';
+import '../widgets/image_cropper_help_overlay.dart';
 import '../widgets/image_cropper_overlay.dart';
 import '../widgets/transformable_image_widget.dart';
-import '../utils/constants.dart';
-import '../utils/log.dart';
-import '../dtos/api_dtos.dart';
-import '../utils/api_endpoints.dart';
-import '../services/auth_http_service.dart';
-import '../utils/image_cropper_key_handler.dart';
-import '../widgets/image_cropper_help_overlay.dart';
-import '../widgets/image_cropper_app_bar.dart';
 
 /// Main page for image cropping functionality
 class ImageCropperPage extends StatefulWidget {
@@ -79,7 +81,9 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
         );
       });
     } catch (e) {
-      _showErrorMessage('Failed to load asset image: $e');
+      _showErrorMessage(
+        AppLocalizations.format('cropperPage.errorLoadAssetImage', {'error': '$e'})
+      );
     }
   }
 
@@ -112,7 +116,9 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
         _setInitialScaleAfterLayout();
       }
     } catch (e) {
-      _showErrorMessage('Failed to pick image: $e');
+      _showErrorMessage(
+        AppLocalizations.format('cropperPage.errorPickImage', {'error': '$e'})
+      );
     }
   }
 
@@ -147,7 +153,9 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
         }
       }
     } catch (e) {
-      _showErrorMessage('Failed to pick image (web): $e');
+      _showErrorMessage(
+        AppLocalizations.format('cropperPage.errorPickImageWeb', {'error': '$e'})
+      );
     }
   }
 
@@ -309,7 +317,6 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
       double newScale = _transformModel.previousScale * details.scale;
       double newRotation = _transformModel.previousRotation;
 
-      // Debug output
       Log.d(
         'newScale = ${_transformModel.previousScale} * ${details.scale} = $newScale',
       );
@@ -428,7 +435,9 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
         'Image saved in ${savedFiles.length} parts successfully!',
       );
     } catch (e) {
-      _showErrorMessage('Failed to save image in four parts: $e');
+      _showErrorMessage(
+        AppLocalizations.format('cropperPage.errorSaveImageParts', {'error': '$e'})
+      );
     }
   }
 
@@ -547,7 +556,6 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
                 child: GestureDetector(
                   onPanStart: _onPanStart,
                   onPanUpdate: _onPanUpdate,
-                  onPanEnd: _onPanEnd,
                   child: Stack(
                     key: _imageCropperKey,
                     children: [
@@ -557,7 +565,6 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
                         onScaleStart: _onScaleStart,
                         onScaleUpdate: _onScaleUpdate,
                       ),
-
                       // Crop overlay
                       IgnorePointer(
                         child: CustomPaint(
@@ -567,7 +574,6 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
                           ),
                         ),
                       ),
-
                       // Help overlay
                       ImageCropperHelpOverlay(
                         transformModel: _transformModel,

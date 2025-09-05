@@ -8,7 +8,7 @@ import 'package:http_parser/http_parser.dart';
 
 import '../utils/api_endpoints.dart';
 import '../utils/log.dart';
-import 'auth_helper.dart'; // <-- Add this import
+import 'auth_helper.dart'; 
 
 // Only import dart:io on non-web platforms
 // ignore: avoid_web_libraries_in_flutter
@@ -46,7 +46,7 @@ class ImageCropService {
     } catch (e, st) {
       return {
         'success': false,
-        'error': e.toString(),
+        'error': '$e',
         'stackTrace': st.toString(),
       };
     }

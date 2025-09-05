@@ -111,9 +111,15 @@ class _PlayPageState extends State<PlayPage> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = 'Error: $e';
+        _error = null;
         _loading = false;
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.get('playPage.backendNotAvailable')),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
