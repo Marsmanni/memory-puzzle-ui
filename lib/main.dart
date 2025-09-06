@@ -96,7 +96,7 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: true,
       home: Scaffold(
         appBar: AppBar(
-          title: Text(AppLocalizations.get('app.title')), // Localized
+          title: Text(AppLocalizations.get('app.title')),
           actions: [
             AppBarActions(
               auth: _authInfo,
