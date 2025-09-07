@@ -88,7 +88,19 @@ class _PlayPageState extends State<PlayPage> {
   @override
   void initState() {
     super.initState();
-    _fetchGroupsAndImages();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+      _preloadPlaceholders();
+      _fetchGroupsAndImages();
+      });
+  }
+
+  void _preloadPlaceholders() {
+    for (final placeholder in _placeholders) {
+      precacheImage(
+        AssetImage(placeholder['asset']!),
+        context,
+      );
+    }
   }
 
   Future<void> _fetchGroupsAndImages() async {

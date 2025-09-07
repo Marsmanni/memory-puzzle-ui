@@ -20,20 +20,20 @@ void main() {
   runApp(
     ChangeNotifierProvider(
       create: (context) => GameManager(),
-      child: const MyApp(),
+      child: const MemoryApp(),
     ),
   );
 }
 
 /// Root widget of the application
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+class MemoryApp extends StatefulWidget {
+  const MemoryApp({super.key});
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  State<MemoryApp> createState() => _MemoryAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MemoryAppState extends State<MemoryApp> {
   AuthInfo _authInfo = AuthInfo();
 
   @override

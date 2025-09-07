@@ -1,7 +1,9 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+
 import '../dtos/api_dtos.dart';
 import '../services/log_puzzle_play.dart';
-import 'dart:math';
 
 class GameManager extends ChangeNotifier {
   // Game state variables
@@ -91,8 +93,8 @@ class GameManager extends ChangeNotifier {
 
         // Check if all cards are matched (game finished)
         if (_matchedIndexes.length == _flipped.length) {
-          // Collect parameters and call the centralized log function
-          await logPuzzlePlay(
+          // Collect parameters and call the centralized log function in the background
+          logPuzzlePlay(
             puzzleId: _puzzleId!,
             user: _currentUser!,
             startTime: _playStartTime!,
@@ -103,6 +105,8 @@ class GameManager extends ChangeNotifier {
             drawOrder: _drawOrder.join(','),
             mode: _mode,
           );
+          // Notify listeners immediately
+          notifyListeners();
         }
       } else {
         _moves[_currentPlayer]++;
