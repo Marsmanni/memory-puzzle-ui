@@ -1,9 +1,11 @@
 import 'dart:math';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
 import '../dtos/api_dtos.dart';
 import '../services/log_puzzle_play.dart';
+import '../utils/log.dart';
 
 class GameManager extends ChangeNotifier {
   // Game state variables
@@ -27,6 +29,9 @@ class GameManager extends ChangeNotifier {
   String _mode = 'standard';
   List<int> _drawOrder = [];
 
+  // Sound control
+  bool _isSoundMuted = true; // Default: Off
+
   // Getters for the UI to access state
   int get playerCount => _playerCount;
   int get currentPlayer => _currentPlayer;
@@ -38,6 +43,14 @@ class GameManager extends ChangeNotifier {
   List<PuzzleImageDto> get images => _images;
   bool get isProcessingMove => _isProcessingMove;
   List<int> get drawOrder => _drawOrder;
+  bool get isSoundMuted => _isSoundMuted;
+
+  set isSoundMuted(bool value) {
+    if (_isSoundMuted != value) {
+      _isSoundMuted = value;
+      notifyListeners();
+    }
+  }
 
   GameManager() {
     _moves = List<int>.filled(_playerCount, 0);
@@ -68,6 +81,8 @@ class GameManager extends ChangeNotifier {
     _drawOrder = [];
     notifyListeners();
   }
+
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   void onCardTap(int index) async {
     if (_isProcessingMove || _flipped[index] || _matchedIndexes.contains(index) || _selectedIndexes.length == 2) {
@@ -106,7 +121,19 @@ class GameManager extends ChangeNotifier {
             mode: _mode,
           );
           // Notify listeners immediately
+          try {
+            if (!_isSoundMuted) {
+              final source = AssetSource('sounds/fanfare.mp3');
+              await _audioPlayer.play(source);
+            }
+          } catch (e) {
+            Log.e('Failed to play fanfare: $e');
+          }
+
           notifyListeners();
+
+          // Show congratulation (call from UI after notifyListeners)
+          // Example: showDialog or showSnackBar in your widget when gameManager.matchedIndexes.length == gameManager.flipped.length
         }
       } else {
         _moves[_currentPlayer]++;

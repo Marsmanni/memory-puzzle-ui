@@ -1,19 +1,12 @@
 import 'package:flutter/material.dart';
 import '../utils/app_localizations.dart';
+import '../models/settings.dart'; // Import your settings class
 
 class PlaySettingsMenu extends StatelessWidget {
-  final int selectedPlaceholderIndex;
-  final List<Map<String, String>> placeholders;
-  final ValueChanged<int> onPlaceholderChanged;
-  final String languageCode;
-  final ValueChanged<String> onLanguageChanged;
-
+  final GameSettings settings;
+  
   const PlaySettingsMenu({
-    required this.selectedPlaceholderIndex,
-    required this.placeholders,
-    required this.onPlaceholderChanged,
-    required this.languageCode,
-    required this.onLanguageChanged,
+    required this.settings,
     super.key,
   });
 
@@ -27,9 +20,9 @@ class PlaySettingsMenu extends StatelessWidget {
           enabled: false,
           child: Text(AppLocalizations.get('playPage.selectPlaceholder')),
         ),
-        ...List.generate(placeholders.length, (i) => PopupMenuItem<String>(
+        ...List.generate(settings.placeholders.length, (i) => PopupMenuItem<String>(
           value: 'placeholder_$i',
-          child: Text(AppLocalizations.get('playPage.${placeholders[i]['key']}')),
+          child: Text(AppLocalizations.get('playPage.${settings.placeholders[i]['key']}')),
         )),
         const PopupMenuDivider(),
         PopupMenuItem<String>(
@@ -43,7 +36,7 @@ class PlaySettingsMenu extends StatelessWidget {
               const Text('🇩🇪 '),
               const SizedBox(width: 8),
               const Text('Deutsch'),
-              if (languageCode == 'de') ...[
+              if (settings.languageCode == 'de') ...[
                 const SizedBox(width: 8),
                 const Icon(Icons.check, color: Colors.green, size: 18),
               ],
@@ -57,10 +50,29 @@ class PlaySettingsMenu extends StatelessWidget {
               const Text('🇬🇧 '),
               const SizedBox(width: 8),
               const Text('English'),
-              if (languageCode == 'en') ...[
+              if (settings.languageCode == 'en') ...[
                 const SizedBox(width: 8),
                 const Icon(Icons.check, color: Colors.green, size: 18),
               ],
+            ],
+          ),
+        ),
+        const PopupMenuDivider(),
+        PopupMenuItem<String>(
+          value: 'toggle_sound',
+          child: Row(
+            children: [
+              Icon(settings.isSoundMuted ? Icons.volume_off : Icons.volume_up, color: Colors.blue),
+              const SizedBox(width: 8),
+              Text(AppLocalizations.get('playPage.sound')),
+              const Spacer(),
+              Switch(
+                value: !settings.isSoundMuted,
+                onChanged: (value) {
+                  settings.isSoundMuted = !value;
+                  Navigator.pop(context);
+                },
+              ),
             ],
           ),
         ),
@@ -68,11 +80,13 @@ class PlaySettingsMenu extends StatelessWidget {
       onSelected: (value) {
         if (value.startsWith('placeholder_')) {
           final index = int.parse(value.split('_')[1]);
-          onPlaceholderChanged(index);
+          settings.selectedPlaceholderIndex = index;
         } else if (value == 'lang_de') {
-          onLanguageChanged('de');
+          settings.languageCode = 'de';
         } else if (value == 'lang_en') {
-          onLanguageChanged('en');
+          settings.languageCode = 'en';
+        } else if (value == 'toggle_sound') {
+          settings.isSoundMuted = !settings.isSoundMuted;
         }
       },
     );

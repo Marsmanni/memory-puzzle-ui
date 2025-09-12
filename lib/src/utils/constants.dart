@@ -15,7 +15,8 @@ class AppConstants {
   static const double defaultRotation = 0.0;
 
   // Asset paths
-  static const String defaultImageAsset = 'assets/sample.png';
+  static const String defaultImageAsset = 'sample.png';
+  static const String imagePrefix = "assets/images/";
 
   // App metadata
   static const String appTitle = 'Wunderwelt Memory Game';

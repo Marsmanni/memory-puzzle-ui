@@ -99,7 +99,7 @@ class SystemInfoService {
 
     String encryptedText;
     try {
-      encryptedText = (await rootBundle.loadString('assets/deployment.txt')).trim();
+      encryptedText = (await rootBundle.loadString('deployment.txt')).trim();
     } catch (e) {
       Log.e('Could not load deployment.txt, using fallback.');
       return clientDeploymentInfoMissing;

@@ -40,6 +40,10 @@ flutter clean
 
 Write-Host "Building Flutter web app..."
 flutter build web
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Build failed. Exiting script."
+    exit 1
+}
 
 # Set your encryption key (must be 32 chars for AES-256)
 $encryptionKey = "ThisIsMySuperSecretKeyLOL1234567"
@@ -58,10 +62,8 @@ $timestamp = Get-Date -Format "yyyyMMddHHmmss"
 $version = "1.2.3" # Set your version here, or read from a file
 $gitCommit = git log -1 --pretty=format:"%h %ad %s" --date=format:"%H:%M %d.%m.%Y"
 
-
-
 Write-Host "Ensuring assets directory exists..."
-$assetsPath = Join-Path $localFolder "assets/assets"
+$assetsPath = Join-Path $localFolder "assets"
 New-Item -Path $assetsPath -ItemType Directory -Force | Out-Null
 
 Write-Host "Creating deployment info string..."
@@ -91,7 +93,6 @@ if ($deploymentInfo.Trim() -ne $deploymentInfoNew.Trim()) {
 $path = Join-Path $assetsPath "deployment.txt"
 Write-Host "Saving encrypted deployment info to assets, path: $path..."
 Set-Content -Path $path -Value $encryptedInfo -Encoding ascii
-
 
 Write-Host "Preparing WinSCP FTP script..."
 $scriptPath = "C:\Sources\Flutter\MemoryPuzzleUI\winscp_ftp_script.txt"

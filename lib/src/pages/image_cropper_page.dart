@@ -70,7 +70,7 @@ class _ImageCropperPageState extends State<ImageCropperPage> {
   Future<void> _loadImageAsset() async {
     try {
       final image = await ImageService.loadImageFromAssets(
-        AppConstants.defaultImageAsset,
+        AppConstants.imagePrefix + AppConstants.defaultImageAsset,
       );
 
       setState(() {

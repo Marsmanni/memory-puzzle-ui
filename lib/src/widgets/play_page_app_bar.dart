@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../dtos/api_dtos.dart';
 import '../utils/app_localizations.dart';
+import '../models/settings.dart';
 import 'play_settings_menu.dart';
 
 class PlayPageAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -13,11 +14,7 @@ class PlayPageAppBar extends StatelessWidget implements PreferredSizeWidget {
   final List<int> moves;
   final List<int> matches;
   final int currentPlayer;
-  final int selectedPlaceholderIndex;
-  final List<Map<String, String>> placeholders;
-  final ValueChanged<int> onPlaceholderChanged;
-  final String languageCode;
-  final ValueChanged<String> onLanguageChanged;
+  final GameSettings settings;
 
   const PlayPageAppBar({
     super.key,
@@ -30,11 +27,7 @@ class PlayPageAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.moves,
     required this.matches,
     required this.currentPlayer,
-    required this.selectedPlaceholderIndex,
-    required this.placeholders,
-    required this.onPlaceholderChanged,
-    required this.languageCode,
-    required this.onLanguageChanged,
+    required this.settings,
   });
 
   @override
@@ -113,11 +106,7 @@ class PlayPageAppBar extends StatelessWidget implements PreferredSizeWidget {
             ),
             const SizedBox(width: 16),
             PlaySettingsMenu(
-              selectedPlaceholderIndex: selectedPlaceholderIndex,
-              placeholders: placeholders,
-              onPlaceholderChanged: onPlaceholderChanged,
-              languageCode: languageCode,
-              onLanguageChanged: onLanguageChanged,
+              settings: settings,
             ),
           ],
         ),
