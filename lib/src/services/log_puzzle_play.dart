@@ -4,7 +4,7 @@ import '../utils/api_endpoints.dart';
 import '../utils/log.dart'; 
 
 // Call this when ending play (e.g., when the puzzle is solved or user exits)
-Future<void> logPuzzlePlay({
+Future<bool> logPuzzlePlay({
   required int puzzleId,
   required String user,
   required DateTime startTime,
@@ -38,10 +38,13 @@ Future<void> logPuzzlePlay({
     );
     if (response.statusCode == 200 || response.statusCode == 201) {
       Log.i('Puzzle play logged successfully.');
+      return true;
     } else {
       Log.w('Failed to log puzzle play: ${response.statusCode}');
+      return false;
     }
   } catch (e) {
     Log.e('Error logging puzzle play: $e');
+    return false;
   }
 }

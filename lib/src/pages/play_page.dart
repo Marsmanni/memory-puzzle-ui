@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../dtos/api_dtos.dart';
-import '../models/game_statistics.dart';
 import '../models/game_settings.dart';
 import '../services/auth_helper.dart';
 import '../services/api_service.dart';
@@ -27,33 +26,24 @@ class _PlayPageState extends State<PlayPage> {
   // --- Services & Managers ---
   final ApiService _apiService = ApiService();
   final AuthInfo _authInfo = AuthInfo();
-  late final GameSettings gameSettings;
-  GameControls? gameStatistics;
+  //late final GameSettings gameSettings;
 
   // --- UI State ---
   bool _loading = false;
   String? _error;
   bool _congratulationShown = false;
 
+  GameManager get gameManager => Provider.of<GameManager>(context, listen: false);
+
   // --- Lifecycle ---
   @override
   void initState() {
     super.initState();
 
-    // Initialize game settings
-    gameSettings = GameSettings(
-      languageCode: 'de',
-      isSoundMuted: true,
-      selectedPlaceholderIndex: 0,
-    );
-
-    // Listen for settings changes
-    gameSettings.onSettingChanged = _onSettingsChanged;
-
     gameManager.addListener(_checkGameFinished);
+    gameManager.gameSettings.onSettingChanged = _onSettingsChanged;
   }
 
-  GameManager get gameManager => Provider.of<GameManager>(context, listen: false);
 
   @override
   void didChangeDependencies() {
@@ -77,7 +67,6 @@ class _PlayPageState extends State<PlayPage> {
         break;
       case GameSettings.keySoundChanged:
         setState(() {
-          gameManager.isSoundMuted = value as bool;
         });
         break;
       case GameSettings.keyPlaceholderChanged:
@@ -91,9 +80,9 @@ class _PlayPageState extends State<PlayPage> {
   void _onControlsChanged(String key, dynamic value) {
     switch (key) {
       case PlayPageAppBar.keyPuzzleChanged:
-        if (value is int && gameStatistics != null) {
+        if (value is int) {
           setState(() {
-            gameStatistics?.setSelectedPuzzleIndex = value;
+            gameManager.gamePuzzles.setSelectedPuzzleIndex = value;
           });
           _initializeGame();
         }
@@ -101,7 +90,7 @@ class _PlayPageState extends State<PlayPage> {
       case PlayPageAppBar.keyPlayerCountChanged:
         if (value is int) {
           setState(() {
-            gameStatistics?.playerStats.playerCount = value;
+            gameManager.playerStats.playerCount = value;
           });
           _initializeGame();
         }
@@ -137,7 +126,7 @@ class _PlayPageState extends State<PlayPage> {
 
   // --- Asset Preloading ---
   void _preloadPlaceholders() {
-    for (final placeholder in gameSettings.placeholders) {
+    for (final placeholder in gameManager.gameSettings.placeholders) {
       precacheImage(
         AssetImage('${placeholder['asset']}'),
         context,
@@ -169,12 +158,8 @@ class _PlayPageState extends State<PlayPage> {
         _loading = false;
       });
       if (puzzles.isNotEmpty) {
-    // Initialize game statistics
-        gameStatistics = GameControls(
-          puzzles: puzzles,
-          selectedPuzzleIndex: 0,
-          playerStats: gameManager.playerStats,
-        );
+        // Initialize game statistics
+        gameManager.gamePuzzles.puzzles = puzzles;
 
         _initializeGame();
       }
@@ -195,46 +180,36 @@ class _PlayPageState extends State<PlayPage> {
 
   // --- Game Initialization ---
   void _initializeGame() {
+    var selectedPuzzle = gameManager.gamePuzzles.getSelectedPuzzle();
     gameManager.initializeGame(
-      puzzle: gameStatistics!.getSelectedPuzzle(),
+      puzzle: selectedPuzzle,
       currentUser: _authInfo.user ?? 'Guest',
     );
-    _precacheImages(gameStatistics!.getSelectedPuzzle());
+    _precacheImages(selectedPuzzle);
+    setState(() {
+      _congratulationShown = false;
+    });
   }
 
   // --- UI Build ---
   @override
   Widget build(BuildContext context) {
-    if (gameStatistics == null) {
+    if (gameManager.gamePuzzles.getSelectedPuzzle() == null) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
     }
     return Scaffold(
       appBar: PlayPageAppBar(
-        control:  gameStatistics!,
-        settings: gameSettings,
         onControlChanged: (key, value) { _onControlsChanged(key, value); },
-        /*
-        onReset: () => _initializeGame(),
-        onPlayerCountChanged: (count) {
-          gameManager.onPlayerCountChanged(count);
-          _initializeGame();
-        },
-        onPuzzleChanged: (index) {
-          setState(() {
-            gameStatistics!.selectedPuzzleIndex = index;
-          });
-          _initializeGame();
-        },*/
       ),
       body: Stack(
         children: [
           _error != null
               ? Center(child: Text(_error!))
               : PuzzleGrid(
-                  key: ValueKey(gameSettings.selectedAsset),
-                  gameSettings: gameSettings,
+                  key: ValueKey(gameManager.gameSettings.selectedAsset),
+                  gameSettings: gameManager.gameSettings,
                 ),
           PlayPageLoadingOverlay(loading: _loading),
         ],

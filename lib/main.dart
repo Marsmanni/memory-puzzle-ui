@@ -17,7 +17,7 @@ import 'src/widgets/system_info_dialog.dart';
 /// Entry point of the application
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  final gameManager = GameManager(); // You can configure it here if needed
+  final gameManager = GameManager(); 
 
   runApp(
     ChangeNotifierProvider<GameManager>.value(

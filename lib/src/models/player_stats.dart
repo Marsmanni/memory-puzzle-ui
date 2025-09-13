@@ -1,10 +1,10 @@
-class PlayerStats {
+class GameStats {
   int _playerCount;
   int _currentPlayer;
   late List<int> _moves;
   late List<int> _matches;
 
-  PlayerStats({int playerCount = 1})
+  GameStats({int playerCount = 1})
       : _playerCount = playerCount,
         _currentPlayer = 0 {
     _moves = List<int>.filled(_playerCount, 0);

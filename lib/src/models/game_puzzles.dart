@@ -1,23 +1,23 @@
-import 'package:wunderwelt_memory/src/models/player_stats.dart';
-
 import '../dtos/api_dtos.dart';
 
-class GameControls {
+class GamePuzzles {
   List<PuzzleDto>? puzzles;
   int selectedPuzzleIndex;
-  PlayerStats playerStats = PlayerStats();
 
-  GameControls({
+  GamePuzzles({
     this.puzzles,
     required this.selectedPuzzleIndex,
-    required this.playerStats,
   });
 
-  set setPuzzles(List<PuzzleDto> value) => puzzles = value;
+  set setPuzzles(List<PuzzleDto> value) {
+    puzzles = value.isNotEmpty ? value : null;
+    selectedPuzzleIndex = 0; // Reset to first puzzle when list changes
+  }
+
   set setSelectedPuzzleIndex(int value) => selectedPuzzleIndex = value;
 
   PuzzleDto? getSelectedPuzzle() {
-    if (puzzles!.isNotEmpty &&
+    if (puzzles != null &&
         selectedPuzzleIndex >= 0 &&
         selectedPuzzleIndex < puzzles!.length) {
       return puzzles![selectedPuzzleIndex];

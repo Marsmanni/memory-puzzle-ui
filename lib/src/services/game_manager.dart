@@ -4,6 +4,8 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
+import 'package:wunderwelt_memory/src/models/game_settings.dart';
+import 'package:wunderwelt_memory/src/models/game_puzzles.dart';
 
 import '../dtos/api_dtos.dart';
 import '../models/card_state.dart';
@@ -14,7 +16,10 @@ import '../utils/log.dart';
 /// Manages the state and logic for the memory puzzle game.
 class GameManager extends ChangeNotifier {
   // --- Player state ---
-  final PlayerStats _playerStats = PlayerStats();
+  final GameStats _playerStats = GameStats();
+  final GamePuzzles gamePuzzles = GamePuzzles(selectedPuzzleIndex: 0);
+  final GameSettings gameSettings = GameSettings(languageCode: 'de', isSoundMuted: true, selectedPlaceholderIndex: 0);
+  final Logger _logger = Logger();
 
   // --- Game state ---
   PuzzleDto? _puzzle;
@@ -26,27 +31,19 @@ class GameManager extends ChangeNotifier {
 
   // --- Sound ---
   final AudioPlayer _audioPlayer = AudioPlayer();
-  bool _isSoundMuted = true; // Default: Off
 
   // --- Logging ---
   DateTime? _playStartTime;
-  int? _puzzleId;
   String? _currentUser;
   String _mode = 'standard';
   List<int> _drawOrder = [];
 
   // --- Getters for UI ---
-  PlayerStats get playerStats => _playerStats;
+  GameStats get playerStats => _playerStats;
   int get imageCount => _puzzle!.images.length;
   bool get isGameFinished => (_flipped.isNotEmpty && _matchedIndexes.length == _flipped.length);
   bool get isGridEmpty => (_shuffledIndexes == null || _shuffledIndexes!.isEmpty) || _puzzle!.images.isEmpty;
 
-  set isSoundMuted(bool value) {
-    if (_isSoundMuted != value) {
-      _isSoundMuted = value;
-      notifyListeners();
-    }
-  }
 
   /// Returns true if the card at [index] should be disabled.
   bool isCardDisabled(int index) {
@@ -76,7 +73,7 @@ class GameManager extends ChangeNotifier {
     );
   }
   /// Constructor
-  GameManager();
+  //GameManager();
    
   // --- Game initialization & reset ---
 
@@ -102,15 +99,10 @@ class GameManager extends ChangeNotifier {
     _currentUser = currentUser;
     _mode = mode;
     _drawOrder = [];
-    notifyListeners();
+    //notifyListeners();
     playSound("intro_sound");
   }
-
-  /// Resets the game. Call initializeGame from UI to reset and start a new game.
-  void resetGame() {
-    // Implement if needed
-  }
-
+  
   /// Updates the player count and resets player stats.
   void onPlayerCountChanged(int count) {
     _playerStats.playerCount = count;
@@ -124,7 +116,7 @@ class GameManager extends ChangeNotifier {
       return;
     }
 
-    Log.d('Card tapped: index=$index, imageUid=${getShuffledImageUid(index)}');
+    //Log.d('Card tapped: index=$index, imageUid=${getShuffledImageUid(index)}');
     await playSound("arcade_flip");
 
     _flipped[index] = true;
@@ -140,29 +132,33 @@ class GameManager extends ChangeNotifier {
 
       if (firstImg?.imageUid == secondImg?.imageUid) {
         _playerStats.incrementMatch();
+        //notifyListeners();
         _matchedIndexes.addAll(_selectedIndexes);
         _selectedIndexes.clear();
         _isProcessingMove = false;
 
         // Game finished
         if (isGameFinished) {
-          logPuzzlePlay(
-            puzzleId: _puzzleId!,
-            user: _currentUser!,
-            startTime: _playStartTime!,
-            endTime: DateTime.now(),
-            playerCount: _playerStats.playerCount,
-            draws: _drawOrder.length,
-            tileOrder: _shuffledIndexes!.join(','),
-            drawOrder: _drawOrder.join(','),
-            mode: _mode,
-          );
-          await playSound("fanfare");
-          notifyListeners();
-          // Show congratulation (call from UI after notifyListeners)
+          Future.delayed(const Duration(seconds: 1), () async {
+            await logPuzzlePlay(
+              puzzleId: _puzzle!.id,
+              user: _currentUser!,
+              startTime: _playStartTime!,
+              endTime: DateTime.now(),
+              playerCount: _playerStats.playerCount,
+              draws: _drawOrder.length,
+              tileOrder: _shuffledIndexes!.join(','),
+              drawOrder: _drawOrder.join(','),
+              mode: _mode,
+            );
+            notifyListeners();
+            await playSound("fanfare");
+            return;
+          });
         }
       } else {
         _playerStats.incrementMove();
+        //notifyListeners();
         Future.delayed(const Duration(seconds: 1), () {
           _flipped[firstIdx] = false;
           _flipped[secondIdx] = false;
@@ -173,12 +169,13 @@ class GameManager extends ChangeNotifier {
         });
       }
     }
+
     notifyListeners();
   }
 
   Future<void> playSound(String name) async {
     try {
-      if (!_isSoundMuted) {
+      if (!gameSettings.isSoundMuted) {
         final source = AssetSource('sounds/$name.mp3');
         await _audioPlayer.play(source);
       }

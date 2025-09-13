@@ -35,6 +35,8 @@ class AppLocalizations {
       'playPage.backendNotAvailable': 'Backend nicht verfügbar.',
       'playPage.congratulations': 'Herzlichen Glückwunsch! Du hast das Puzzle gelöst!',
       'playPage.sound': 'Sound',
+      'playPage.soundOff': 'Ton aus',
+      'playPage.soundOn': 'Ton an',
 
       // Widgets
       'userAdminCard.puzzles': 'Puzzles',
@@ -87,8 +89,6 @@ class AppLocalizations {
       'cropperPage.successSaved': 'Gespeichert: {path}',
       'cropperPage.errorCropSaveUpload': 'Fehler beim Zuschneiden, Speichern oder Hochladen des Bildes: {error}',
       'cropperPage.errorSaveParts': 'Fehler beim Speichern des Bildes in vier Teilen',
-      'cropperPage.uploadSuccess': 'Upload: Erfolgreich',
-      'cropperPage.uploadFailed': 'Upload: Fehlgeschlagen',
 
       'cropperPage.helpText': '''
 ERWEITERTE STEUERUNG:
@@ -153,6 +153,8 @@ ERWEITERTE STEUERUNG:
       'playPage.backendNotAvailable': 'Backend not available.',
       'playPage.congratulations': 'Congratulations! You solved the puzzle!',
       'playPage.sound': 'Sound',
+      'playPage.soundOff': 'Sound Off',
+      'playPage.soundOn': 'Sound On',
 
       // Widgets
       'userAdminCard.puzzles': 'Puzzles',
