@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../utils/app_localizations.dart';
-import '../models/settings.dart'; // Import your settings class
+import '../models/game_settings.dart'; // Import your settings class
 
 class PlaySettingsMenu extends StatelessWidget {
   final GameSettings settings;

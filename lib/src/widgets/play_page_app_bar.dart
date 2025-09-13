@@ -2,24 +2,25 @@ import 'package:flutter/material.dart';
 
 import '../dtos/api_dtos.dart';
 import '../models/game_statistics.dart';
-import '../models/settings.dart';
+import '../models/game_settings.dart';
 import '../utils/app_localizations.dart';
 import 'play_settings_menu.dart';
 
 class PlayPageAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final ValueChanged<int> onPuzzleChanged;
-  final VoidCallback onReset;
-  final ValueChanged<int> onPlayerCountChanged;
+  // --- Static keys for onControlChanged ---
+  static const String keyPuzzleChanged = "puzzleChanged";
+  static const String keyPlayerCountChanged = "playerCountChanged";
+  static const String keyReset = "reset";
+
   final GameControls control;
   final GameSettings settings;
+  final void Function(dynamic key, dynamic value) onControlChanged;
 
   const PlayPageAppBar({
     super.key,
     required this.control,
-    required this.onPuzzleChanged,
-    required this.onReset,
-    required this.onPlayerCountChanged,
     required this.settings,
+    required this.onControlChanged,
   });
 
   @override
@@ -33,31 +34,31 @@ class PlayPageAppBar extends StatelessWidget implements PreferredSizeWidget {
             const SizedBox(width: 16),
             DropdownButton<PuzzleDto>(
               value: control.getSelectedPuzzle(),
-              items: control.puzzles.isNotEmpty
+              items: control.puzzles!.isNotEmpty
                   ? List.generate(
-                      control.puzzles.length,
+                      control.puzzles!.length,
                       (i) => DropdownMenuItem(
-                        value: control.puzzles[i],
-                        child: Text(control.puzzles[i].name),
+                        value: control.puzzles![i],
+                        child: Text(control.puzzles![i].name),
                       ),
                     )
                   : [],
-              onChanged: control.puzzles.isNotEmpty
+              onChanged: control.puzzles!.isNotEmpty
                   ? (value) {
                       if (value != null) {
-                        onPuzzleChanged(control.puzzles.indexOf(value));
+                        onControlChanged(keyPuzzleChanged, control.puzzles!.indexOf(value));
                       }
                     }
                   : null, // disables dropdown if empty
             ),
             const SizedBox(width: 16),
             ElevatedButton(
-              onPressed: onReset,
+              onPressed: () => onControlChanged(keyReset, null),
               child: Text(AppLocalizations.get('playPage.reset')),
             ),
             const SizedBox(width: 16),
             DropdownButton<int>(
-              value: control.playerCount,
+              value: control.playerStats.playerCount,
               items: [1, 2, 3]
                   .map(
                     (count) => DropdownMenuItem(
@@ -70,25 +71,25 @@ class PlayPageAppBar extends StatelessWidget implements PreferredSizeWidget {
                   .toList(),
               onChanged: (value) {
                 if (value != null) {
-                  onPlayerCountChanged(value);
+                  onControlChanged(keyPlayerCountChanged, value);
                 }
               },
             ),
             const SizedBox(width: 16),
             ...List.generate(
-              control.playerCount,
+              control.playerStats.playerCount,
               (i) => Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: Chip(
                   label: Text(
-                    'P${i + 1}: ${control.moves[i]} ${AppLocalizations.get('playPage.moves')}, ${control.matches[i]} ${AppLocalizations.get('playPage.matches')}${control.currentPlayer == i ? " ←" : ""}',
+                    'P${i + 1}: ${control.playerStats.moves[i]} ${AppLocalizations.get('playPage.moves')}, ${control.playerStats.matches[i]} ${AppLocalizations.get('playPage.matches')}${control.playerStats.currentPlayer == i ? " ←" : ""}',
                     style: TextStyle(
-                      fontWeight: control.currentPlayer == i
+                      fontWeight: control.playerStats.currentPlayer == i
                           ? FontWeight.bold
                           : FontWeight.normal,
                     ),
                   ),
-                  backgroundColor: control.currentPlayer == i
+                  backgroundColor: control.playerStats.currentPlayer == i
                       ? Colors.blue[100]
                       : Colors.grey[200],
                 ),

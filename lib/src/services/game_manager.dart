@@ -1,7 +1,9 @@
 import 'dart:math';
 
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:logger/logger.dart';
 
 import '../dtos/api_dtos.dart';
 import '../models/card_state.dart';
@@ -15,8 +17,8 @@ class GameManager extends ChangeNotifier {
   final PlayerStats _playerStats = PlayerStats();
 
   // --- Game state ---
-  late PuzzleDto _puzzle;
-  late List<bool> _flipped;
+  PuzzleDto? _puzzle;
+  List<bool> _flipped = List.empty(growable: true);
   List<int>? _shuffledIndexes;
   final List<int> _selectedIndexes = [];
   final Set<int> _matchedIndexes = {};
@@ -35,9 +37,9 @@ class GameManager extends ChangeNotifier {
 
   // --- Getters for UI ---
   PlayerStats get playerStats => _playerStats;
-  int get imageCount => _puzzle.images.length;
+  int get imageCount => _puzzle!.images.length;
   bool get isGameFinished => (_flipped.isNotEmpty && _matchedIndexes.length == _flipped.length);
-  bool get isGridEmpty => (_shuffledIndexes == null || _shuffledIndexes!.isEmpty) || _puzzle.images.isEmpty;
+  bool get isGridEmpty => (_shuffledIndexes == null || _shuffledIndexes!.isEmpty) || _puzzle!.images.isEmpty;
 
   set isSoundMuted(bool value) {
     if (_isSoundMuted != value) {
@@ -58,10 +60,10 @@ class GameManager extends ChangeNotifier {
 
   /// Returns the shuffled [PuzzleImageDto] for the card at [index].
   PuzzleImageDto? getShuffledImage(int index) {
-    if (_shuffledIndexes == null || _shuffledIndexes!.isEmpty || _puzzle.images.isEmpty) return null;
+    if (_shuffledIndexes == null || _shuffledIndexes!.isEmpty || _puzzle!.images.isEmpty ?? true) return null;
     final imgIndex = _shuffledIndexes![index];
-    if (imgIndex < 0 || imgIndex >= _puzzle.images.length) return null;
-    return _puzzle.images[imgIndex];
+    if (imgIndex < 0 || imgIndex >= _puzzle!.images.length) return null;
+    return _puzzle! .images[imgIndex];
   }
 
   /// Returns the [CardState] for the card at [index].
@@ -73,7 +75,6 @@ class GameManager extends ChangeNotifier {
       onTap: () => onCardTap(index),
     );
   }
-
   /// Constructor
   GameManager();
    
@@ -86,13 +87,17 @@ class GameManager extends ChangeNotifier {
     required String currentUser,
     String mode = 'standard', 
   }) {
-    _flipped = List<bool>.filled(_puzzle.images.length * 2, false);
-    _shuffledIndexes = List<int>.generate(_puzzle.images.length * 2, (i) => i % _puzzle.images.length);
+    if (puzzle == null || puzzle.images.isEmpty) {
+      return;
+    }
+    _puzzle = puzzle;
+    _flipped = List<bool>.filled(_puzzle!.images.length * 2, false);
+    _shuffledIndexes = List<int>.generate(_puzzle!.images.length * 2, (i) => i % _puzzle!.images.length);
     _shuffledIndexes!.shuffle(Random());
     _selectedIndexes.clear();
     _matchedIndexes.clear();
     _isProcessingMove = false;
-    _playerStats.currentPlayer = 0;
+    _playerStats.playerCount = _playerStats.playerCount;
     _playStartTime = DateTime.now();
     _currentUser = currentUser;
     _mode = mode;
@@ -109,7 +114,6 @@ class GameManager extends ChangeNotifier {
   /// Updates the player count and resets player stats.
   void onPlayerCountChanged(int count) {
     _playerStats.playerCount = count;
-    notifyListeners();
   }
 
   // --- Card interaction logic ---
@@ -120,7 +124,8 @@ class GameManager extends ChangeNotifier {
       return;
     }
 
-    await playSound("realistic_flip");
+    Log.d('Card tapped: index=$index, imageUid=${getShuffledImageUid(index)}');
+    await playSound("arcade_flip");
 
     _flipped[index] = true;
     _selectedIndexes.add(index);
@@ -164,11 +169,11 @@ class GameManager extends ChangeNotifier {
           _selectedIndexes.clear();
           _isProcessingMove = false;
           _playerStats.nextPlayer();
-          //notifyListeners();
+          notifyListeners();
         });
       }
     }
-    //notifyListeners();
+    notifyListeners();
   }
 
   Future<void> playSound(String name) async {

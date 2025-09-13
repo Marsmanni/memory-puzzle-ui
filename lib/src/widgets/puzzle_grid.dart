@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../services/game_manager.dart';
-import '../models/settings.dart';
+import '../models/game_settings.dart';
 import '../utils/api_endpoints.dart';
 import '../utils/constants.dart';
 import 'puzzle_card.dart';
 
 class PuzzleGrid extends StatelessWidget {
-  final GameManager gameManager;
   final GameSettings gameSettings;
 
   const PuzzleGrid({
-    required this.gameManager,
     required this.gameSettings,
     super.key,
   });
 
   @override
   Widget build(BuildContext context) {
+    final gameManager = Provider.of<GameManager>(context);
     if (gameManager.isGridEmpty) {
       return Container();
     }
