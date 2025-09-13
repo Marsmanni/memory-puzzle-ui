@@ -4,46 +4,43 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
 import '../dtos/api_dtos.dart';
+import '../models/card_state.dart';
+import '../models/player_stats.dart';
 import '../services/log_puzzle_play.dart';
 import '../utils/log.dart';
 
+/// Manages the state and logic for the memory puzzle game.
 class GameManager extends ChangeNotifier {
-  // Game state variables
-  int _playerCount = 1;
-  int _currentPlayer = 0;
-  late List<int> _moves;
-  late List<int> _matches;
+  // --- Player state ---
+  final PlayerStats _playerStats = PlayerStats();
 
+  // --- Game state ---
+  List<PuzzleImageDto> _images = [];
   late List<bool> _flipped;
-  late List<int> _shuffledIndexes;
+  List<int>? _shuffledIndexes;
   final List<int> _selectedIndexes = [];
   final Set<int> _matchedIndexes = {};
-
-  List<PuzzleImageDto> _images = [];
   bool _isProcessingMove = false;
 
-  // Logging variables
+  // --- Sound ---
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  bool _isSoundMuted = true; // Default: Off
+
+  // --- Logging ---
   DateTime? _playStartTime;
   int? _puzzleId;
   String? _currentUser;
   String _mode = 'standard';
   List<int> _drawOrder = [];
 
-  // Sound control
-  bool _isSoundMuted = true; // Default: Off
-
-  // Getters for the UI to access state
-  int get playerCount => _playerCount;
-  int get currentPlayer => _currentPlayer;
-  List<int> get moves => _moves;
-  List<int> get matches => _matches;
-  List<bool> get flipped => _flipped;
-  List<int> get shuffledIndexes => _shuffledIndexes;
-  Set<int> get matchedIndexes => _matchedIndexes;
-  List<PuzzleImageDto> get images => _images;
-  bool get isProcessingMove => _isProcessingMove;
-  List<int> get drawOrder => _drawOrder;
-  bool get isSoundMuted => _isSoundMuted;
+  // --- Getters for UI ---
+  PlayerStats get playerStats => _playerStats;
+  int get imageCount => _images.length;
+  bool get isGameFinished =>
+      (_flipped.isNotEmpty && _matchedIndexes.length == _flipped.length);
+       _matchedIndexes.length == _flipped.length);
+  bool get isGridEmpty =>
+      (_shuffledIndexes == null || _shuffledIndexes!.isEmpty) || _images.isEmpty;
 
   set isSoundMuted(bool value) {
     if (_isSoundMuted != value) {
@@ -52,12 +49,40 @@ class GameManager extends ChangeNotifier {
     }
   }
 
-  GameManager() {
-    _moves = List<int>.filled(_playerCount, 0);
-    _matches = List<int>.filled(_playerCount, 0);
+  /// Returns true if the card at [index] should be disabled.
+  bool isCardDisabled(int index) {
+    return _isProcessingMove || _flipped[index] || _matchedIndexes.contains(index);
   }
 
-  // Call this from UI when starting a new game
+  /// Returns the image UID for the shuffled card at [index].
+  String getShuffledImageUid(int index) {
+    return getShuffledImage(index)?.imageUid ?? '';
+  }
+
+  /// Returns the shuffled [PuzzleImageDto] for the card at [index].
+  PuzzleImageDto? getShuffledImage(int index) {
+    if (_shuffledIndexes == null || _shuffledIndexes!.isEmpty || _images.isEmpty) return null;
+    final imgIndex = _shuffledIndexes![index];
+    if (imgIndex < 0 || imgIndex >= _images.length) return null;
+    return _images[imgIndex];
+  }
+
+  /// Returns the [CardState] for the card at [index].
+  CardState getCardState(int index) {
+    return CardState(
+      isMatched: _matchedIndexes.contains(index),
+      isFlipped: _flipped[index],
+      isDisabled: isCardDisabled(index),
+      onTap: () => onCardTap(index),
+    );
+  }
+
+  /// Constructor
+  GameManager();
+   
+  // --- Game initialization & reset ---
+
+  /// Initializes a new game with the given images and parameters.
   void initializeGame(
     List<PuzzleImageDto> images, {
     required int puzzleId,
@@ -67,13 +92,11 @@ class GameManager extends ChangeNotifier {
     _images = images;
     _flipped = List<bool>.filled(_images.length * 2, false);
     _shuffledIndexes = List<int>.generate(_images.length * 2, (i) => i % _images.length);
-    _shuffledIndexes.shuffle(Random());
+    _shuffledIndexes!.shuffle(Random());
     _selectedIndexes.clear();
     _matchedIndexes.clear();
     _isProcessingMove = false;
-    _currentPlayer = 0;
-    _moves = List<int>.filled(_playerCount, 0);
-    _matches = List<int>.filled(_playerCount, 0);
+    _playerStats.currentPlayer = 0;
     _playStartTime = DateTime.now();
     _puzzleId = puzzleId;
     _currentUser = currentUser;
@@ -82,8 +105,20 @@ class GameManager extends ChangeNotifier {
     notifyListeners();
   }
 
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  /// Resets the game. Call initializeGame from UI to reset and start a new game.
+  void resetGame() {
+    // Implement if needed
+  }
 
+  /// Updates the player count and resets player stats.
+  void onPlayerCountChanged(int count) {
+    _playerStats.playerCount = count;
+    notifyListeners();
+  }
+
+  // --- Card interaction logic ---
+
+  /// Handles a card tap at [index].
   void onCardTap(int index) async {
     if (_isProcessingMove || _flipped[index] || _matchedIndexes.contains(index) || _selectedIndexes.length == 2) {
       return;
@@ -97,30 +132,28 @@ class GameManager extends ChangeNotifier {
       _isProcessingMove = true;
       final firstIdx = _selectedIndexes[0];
       final secondIdx = _selectedIndexes[1];
-      final firstImg = _images[_shuffledIndexes[firstIdx]];
-      final secondImg = _images[_shuffledIndexes[secondIdx]];
+      final firstImg = getShuffledImage(firstIdx);
+      final secondImg = getShuffledImage(secondIdx);
 
-      if (firstImg.imageUid == secondImg.imageUid) {
-        _matches[_currentPlayer]++;
+      if (firstImg?.imageUid == secondImg?.imageUid) {
+        _playerStats.incrementMatch();
         _matchedIndexes.addAll(_selectedIndexes);
         _selectedIndexes.clear();
         _isProcessingMove = false;
 
-        // Check if all cards are matched (game finished)
-        if (_matchedIndexes.length == _flipped.length) {
-          // Collect parameters and call the centralized log function in the background
+        // Game finished
+        if (isGameFinished) {
           logPuzzlePlay(
             puzzleId: _puzzleId!,
             user: _currentUser!,
             startTime: _playStartTime!,
             endTime: DateTime.now(),
-            playerCount: _playerCount,
+            playerCount: _playerStats.playerCount,
             draws: _drawOrder.length,
-            tileOrder: _shuffledIndexes.join(','),
+            tileOrder: _shuffledIndexes!.join(','),
             drawOrder: _drawOrder.join(','),
             mode: _mode,
           );
-          // Notify listeners immediately
           try {
             if (!_isSoundMuted) {
               final source = AssetSource('sounds/fanfare.mp3');
@@ -129,40 +162,21 @@ class GameManager extends ChangeNotifier {
           } catch (e) {
             Log.e('Failed to play fanfare: $e');
           }
-
           notifyListeners();
-
           // Show congratulation (call from UI after notifyListeners)
-          // Example: showDialog or showSnackBar in your widget when gameManager.matchedIndexes.length == gameManager.flipped.length
         }
       } else {
-        _moves[_currentPlayer]++;
+        _playerStats.incrementMove();
         Future.delayed(const Duration(seconds: 1), () {
           _flipped[firstIdx] = false;
           _flipped[secondIdx] = false;
           _selectedIndexes.clear();
-          _currentPlayer = (_currentPlayer + 1) % _playerCount;
           _isProcessingMove = false;
+          _playerStats.nextPlayer();
           notifyListeners();
         });
       }
     }
     notifyListeners();
-  }
-
-  void resetGame() {
-    // Call initializeGame from UI to reset and start a new game
-  }
-
-  void onPlayerCountChanged(int count) {
-    _playerCount = count;
-    _moves = List<int>.filled(count, 0);
-    _matches = List<int>.filled(count, 0);
-    _currentPlayer = 0;
-    notifyListeners();
-  }
-
-  bool isCardDisabled(int index) {
-    return isProcessingMove || flipped[index] || matchedIndexes.contains(index);
   }
 }

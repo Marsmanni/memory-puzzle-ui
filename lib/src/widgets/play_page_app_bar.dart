@@ -1,32 +1,24 @@
 import 'package:flutter/material.dart';
+
 import '../dtos/api_dtos.dart';
-import '../utils/app_localizations.dart';
+import '../models/game_statistics.dart';
 import '../models/settings.dart';
+import '../utils/app_localizations.dart';
 import 'play_settings_menu.dart';
 
 class PlayPageAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final List<PuzzleDto> groups;
-  final int selectedPuzzleIndex;
   final ValueChanged<int> onPuzzleChanged;
   final VoidCallback onReset;
-  final int playerCount;
   final ValueChanged<int> onPlayerCountChanged;
-  final List<int> moves;
-  final List<int> matches;
-  final int currentPlayer;
+  final GameControls control;
   final GameSettings settings;
 
   const PlayPageAppBar({
     super.key,
-    required this.groups,
-    required this.selectedPuzzleIndex,
+    required this.control,
     required this.onPuzzleChanged,
     required this.onReset,
-    required this.playerCount,
     required this.onPlayerCountChanged,
-    required this.moves,
-    required this.matches,
-    required this.currentPlayer,
     required this.settings,
   });
 
@@ -40,22 +32,20 @@ class PlayPageAppBar extends StatelessWidget implements PreferredSizeWidget {
             Text(AppLocalizations.get('playPage.title')),
             const SizedBox(width: 16),
             DropdownButton<PuzzleDto>(
-              value: (groups.isNotEmpty && selectedPuzzleIndex >= 0 && selectedPuzzleIndex < groups.length)
-                  ? groups[selectedPuzzleIndex]
-                  : null,
-              items: groups.isNotEmpty
+              value: control.getSelectedPuzzle(),
+              items: control.groups.isNotEmpty
                   ? List.generate(
-                      groups.length,
+                      control.groups.length,
                       (i) => DropdownMenuItem(
-                        value: groups[i],
-                        child: Text(groups[i].name),
+                        value: control.groups[i],
+                        child: Text(control.groups[i].name),
                       ),
                     )
                   : [],
-              onChanged: groups.isNotEmpty
+              onChanged: control.groups.isNotEmpty
                   ? (value) {
                       if (value != null) {
-                        onPuzzleChanged(groups.indexOf(value));
+                        onPuzzleChanged(control.groups.indexOf(value));
                       }
                     }
                   : null, // disables dropdown if empty
@@ -67,7 +57,7 @@ class PlayPageAppBar extends StatelessWidget implements PreferredSizeWidget {
             ),
             const SizedBox(width: 16),
             DropdownButton<int>(
-              value: playerCount,
+              value: control.playerCount,
               items: [1, 2, 3]
                   .map(
                     (count) => DropdownMenuItem(
@@ -86,19 +76,19 @@ class PlayPageAppBar extends StatelessWidget implements PreferredSizeWidget {
             ),
             const SizedBox(width: 16),
             ...List.generate(
-              playerCount,
+              control.playerCount,
               (i) => Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: Chip(
                   label: Text(
-                    'P${i + 1}: ${moves[i]} ${AppLocalizations.get('playPage.moves')}, ${matches[i]} ${AppLocalizations.get('playPage.matches')}${currentPlayer == i ? " ←" : ""}',
+                    'P${i + 1}: ${control.moves[i]} ${AppLocalizations.get('playPage.moves')}, ${control.matches[i]} ${AppLocalizations.get('playPage.matches')}${control.currentPlayer == i ? " ←" : ""}',
                     style: TextStyle(
-                      fontWeight: currentPlayer == i
+                      fontWeight: control.currentPlayer == i
                           ? FontWeight.bold
                           : FontWeight.normal,
                     ),
                   ),
-                  backgroundColor: currentPlayer == i
+                  backgroundColor: control.currentPlayer == i
                       ? Colors.blue[100]
                       : Colors.grey[200],
                 ),

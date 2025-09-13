@@ -23,6 +23,7 @@ class PlaySettingsMenu extends StatelessWidget {
         ...List.generate(settings.placeholders.length, (i) => PopupMenuItem<String>(
           value: 'placeholder_$i',
           child: Text(AppLocalizations.get('playPage.${settings.placeholders[i]['key']}')),
+          onTap: () => settings.selectedPlaceholderIndex = i,
         )),
         const PopupMenuDivider(),
         PopupMenuItem<String>(
@@ -42,6 +43,7 @@ class PlaySettingsMenu extends StatelessWidget {
               ],
             ],
           ),
+          onTap: () => settings.languageCode = 'de',
         ),
         PopupMenuItem<String>(
           value: 'lang_en',
@@ -56,6 +58,7 @@ class PlaySettingsMenu extends StatelessWidget {
               ],
             ],
           ),
+          onTap: () => settings.languageCode = 'en',
         ),
         const PopupMenuDivider(),
         PopupMenuItem<String>(
@@ -75,20 +78,9 @@ class PlaySettingsMenu extends StatelessWidget {
               ),
             ],
           ),
+          onTap: () => settings.isSoundMuted = !settings.isSoundMuted,
         ),
-      ],
-      onSelected: (value) {
-        if (value.startsWith('placeholder_')) {
-          final index = int.parse(value.split('_')[1]);
-          settings.selectedPlaceholderIndex = index;
-        } else if (value == 'lang_de') {
-          settings.languageCode = 'de';
-        } else if (value == 'lang_en') {
-          settings.languageCode = 'en';
-        } else if (value == 'toggle_sound') {
-          settings.isSoundMuted = !settings.isSoundMuted;
-        }
-      },
+      ]
     );
   }
 }

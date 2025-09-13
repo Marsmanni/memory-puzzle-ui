@@ -1,33 +1,34 @@
 import 'package:flutter/material.dart';
 
-class PuzzleCard extends StatelessWidget {
+import '../models/card_state.dart';
+
+class PuzzleCard extends StatefulWidget {
   final String imgUrl;
-  final bool isMatched;
-  final bool isFlipped;
-  final bool isDisabled;
-  final VoidCallback onTap;
   final String placeholderAsset;
+  final CardState state;
 
   const PuzzleCard({
     required this.imgUrl,
-    required this.isMatched,
-    required this.isFlipped,
-    required this.isDisabled,
-    required this.onTap,
     required this.placeholderAsset,
+    required this.state,
     super.key,
   });
 
   @override
+  State<PuzzleCard> createState() => _PuzzleCardState();
+}
+
+class _PuzzleCardState extends State<PuzzleCard> {
+  @override
   Widget build(BuildContext context) {
     return AbsorbPointer(
-      absorbing: isDisabled,
+      absorbing: widget.state.isDisabled,
       child: GestureDetector(
-        onTap: onTap,
+        onTap: widget.state.onTap,
         child: AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),
           transitionBuilder: (child, animation) {
-            final rotate = isFlipped
+            final rotate = widget.state.isFlipped
                 ? Tween(begin: 0.0, end: 1.0).animate(animation)
                 : Tween(begin: 1.0, end: 0.0).animate(animation);
             return AnimatedBuilder(
@@ -36,18 +37,18 @@ class PuzzleCard extends StatelessWidget {
                 final showFront = rotate.value < 0.5;
                 Widget cardContent = showFront
                     ? Image.asset(
-                        placeholderAsset,
+                        widget.placeholderAsset,
                         fit: BoxFit.cover,
                         width: double.infinity,
                         height: double.infinity,
                       )
                     : Image.network(
-                        imgUrl,
+                        widget.imgUrl,
                         fit: BoxFit.cover,
                         width: double.infinity,
                         height: double.infinity,
                       );
-                if (isMatched) {
+                if (widget.state.isMatched) {
                   cardContent = ColorFiltered(
                     colorFilter: const ColorFilter.mode(
                       Colors.grey,
@@ -65,7 +66,7 @@ class PuzzleCard extends StatelessWidget {
             );
           },
           child: SizedBox(
-            key: ValueKey(isFlipped),
+            key: ValueKey(widget.state.isFlipped),
             width: double.infinity,
             height: double.infinity,
           ),

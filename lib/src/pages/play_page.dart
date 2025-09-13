@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../dtos/api_dtos.dart';
+import '../models/game_statistics.dart';
 import '../models/settings.dart';
 import '../services/api_service.dart';
 import '../services/game_manager.dart';
@@ -21,12 +22,8 @@ class PlayPage extends StatefulWidget {
 class _PlayPageState extends State<PlayPage> {
   final ApiService _apiService = ApiService();
 
-  final GameSettings settings = GameSettings(
-        languageCode: 'de',
-        isSoundMuted: true,
-        selectedPlaceholderIndex: 1,
-      );
-  
+  late final GameSettings settings;
+
   List<PuzzleDto> _groups = [];
   int _selectedPuzzleIndex = 0;
   bool _loading = false;
@@ -34,76 +31,84 @@ class _PlayPageState extends State<PlayPage> {
   bool _congratulationShown = false;
 
   @override
+  void initState() {
+    super.initState();
+    settings = GameSettings(
+      languageCode: 'de',
+      isSoundMuted: true,
+      selectedPlaceholderIndex: 0,
+    );
+    settings.onSettingChanged = _onSettingsChanged;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _preloadPlaceholders();
+      _fetchGroupsAndImages();
+    });
+  }
+
+  void _onSettingsChanged(String key, dynamic value) {
+    switch (key) {
+      case GameSettings.keyLanguageChanged:
+        setState(() {
+          AppLocalizations.setLanguage(value as String);
+        });
+        break;
+      case GameSettings.keySoundChanged:
+        setState(() {
+          final gameManager = Provider.of<GameManager>(context, listen: false);
+          gameManager.isSoundMuted = value as bool;
+        });
+        break;
+      case GameSettings.keyPlaceholderChanged:
+        setState(() {
+        });
+        break;
+      default:
+        break;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final gameManager = Provider.of<GameManager>(context);
 
-    settings.onSettingChanged = (String key, dynamic value) {
-      switch (key) {
-        case 'languageChanged':
-          setState(() {
-            AppLocalizations.setLanguage(value as String);
-          });
-          break;
-        case 'soundChanged':
-          setState(() {
-            gameManager.isSoundMuted = value as bool;
-          });
-          break;
-        case 'placeholderChanged':
-          setState(() {
-            settings.selectedPlaceholderIndex = value as int;
-          });
-          break;
-        default:
-          break;
-      }
-    };
+    final gameStatistics = GameControls(
+      groups: _groups,
+      selectedPuzzleIndex: _selectedPuzzleIndex,
+      playerCount: gameManager.playerStats.playerCount,
+      moves: gameManager.playerStats.moves,
+      matches: gameManager.playerStats.matches,
+      currentPlayer: gameManager.playerStats.currentPlayer,
+    );
 
     return Scaffold(
       appBar: PlayPageAppBar(
-        groups: _groups,
-        selectedPuzzleIndex: _selectedPuzzleIndex,
+        control: gameStatistics,
+        settings: settings,
+        onReset: _initializeGame,
+        onPlayerCountChanged: (count) {
+          gameManager.onPlayerCountChanged(count);
+          _initializeGame();
+        },
         onPuzzleChanged: (index) {
           setState(() {
             _selectedPuzzleIndex = index;
           });
           _initializeGame();
         },
-        onReset: _initializeGame,
-        playerCount: gameManager.playerCount,
-        onPlayerCountChanged: (count) {
-          gameManager.onPlayerCountChanged(count);
-          _initializeGame();
-        },
-        moves: gameManager.moves,
-        matches: gameManager.matches,
-        currentPlayer: gameManager.currentPlayer,
-        settings: settings,
       ),
       body: Stack(
         children: [
-          // Main content
           _error != null
               ? Center(child: Text(_error!))
               : PuzzleGrid(
+                  key: ValueKey(settings.selectedAsset),
                   gameManager: gameManager,
-                  placeholders: settings.placeholders,
-                  selectedPlaceholderIndex: settings.selectedPlaceholderIndex,
+                  gameSettings: settings,
                 ),
-          // Intro overlay
           PlayPageLoadingOverlay(loading: _loading),
         ],
       ),
     );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _preloadPlaceholders();
-      _fetchGroupsAndImages();
-    });
   }
 
   @override
@@ -112,10 +117,10 @@ class _PlayPageState extends State<PlayPage> {
     final gameManager = Provider.of<GameManager>(context);
     gameManager.addListener(_checkGameFinished);
   }
-
+    
   void _checkGameFinished() {
     final gameManager = Provider.of<GameManager>(context, listen: false);
-    if (gameManager.matchedIndexes.length == gameManager.flipped.length && !_congratulationShown) {
+    if (gameManager.isGameFinished && !_congratulationShown) {
       setState(() {
         _congratulationShown = true;
       });
@@ -125,11 +130,9 @@ class _PlayPageState extends State<PlayPage> {
           backgroundColor: Colors.green,
         ),
       );
-      // Optionally show a dialog instead
-      // showDialog(...);
     }
     // Reset the flag if a new game starts
-    if (gameManager.matchedIndexes.length != gameManager.flipped.length && _congratulationShown) {
+    if (!gameManager.isGameFinished && _congratulationShown) {
       setState(() {
         _congratulationShown = false;
       });
@@ -203,18 +206,19 @@ class _PlayPageState extends State<PlayPage> {
 
 class PuzzleGrid extends StatelessWidget {
   final GameManager gameManager;
-  final List<Map<String, String>> placeholders;
-  final int selectedPlaceholderIndex;
+  final GameSettings gameSettings;
 
   const PuzzleGrid({
     required this.gameManager,
-    required this.placeholders,
-    required this.selectedPlaceholderIndex,
+    required this.gameSettings,
     super.key,
   });
 
   @override
   Widget build(BuildContext context) {
+    if (gameManager.isGridEmpty) {
+      return Container();
+    }
     return GridView.builder(
       padding: const EdgeInsets.all(16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -222,23 +226,17 @@ class PuzzleGrid extends StatelessWidget {
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
       ),
-      itemCount: gameManager.images.length * 2,
+      itemCount: gameManager.imageCount * 2,
       itemBuilder: (context, index) {
-        if (gameManager.shuffledIndexes.isEmpty || gameManager.images.isEmpty) {
-          return Container();
-        }
-        final imgUid =
-            gameManager.images[gameManager.shuffledIndexes[index]].imageUid;
+        final imgUid = gameManager.getShuffledImageUid(index);
         final imgUrl = AppConstants.replace(ApiEndpoints.imagesGetById, {
           'id': imgUid,
         });
         return PuzzleCard(
+          key: ValueKey('${gameSettings.selectedAsset}_$index'),
           imgUrl: imgUrl,
-          isMatched: gameManager.matchedIndexes.contains(index),
-          isFlipped: gameManager.flipped[index],
-          isDisabled: gameManager.isCardDisabled(index),
-          onTap: () => gameManager.onCardTap(index),
-          placeholderAsset: placeholders[selectedPlaceholderIndex]['asset']!,
+          state: gameManager.getCardState(index),
+          placeholderAsset: gameSettings.selectedAsset,
         );
       },
     );
