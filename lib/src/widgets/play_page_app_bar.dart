@@ -33,19 +33,19 @@ class PlayPageAppBar extends StatelessWidget implements PreferredSizeWidget {
             const SizedBox(width: 16),
             DropdownButton<PuzzleDto>(
               value: control.getSelectedPuzzle(),
-              items: control.groups.isNotEmpty
+              items: control.puzzles.isNotEmpty
                   ? List.generate(
-                      control.groups.length,
+                      control.puzzles.length,
                       (i) => DropdownMenuItem(
-                        value: control.groups[i],
-                        child: Text(control.groups[i].name),
+                        value: control.puzzles[i],
+                        child: Text(control.puzzles[i].name),
                       ),
                     )
                   : [],
-              onChanged: control.groups.isNotEmpty
+              onChanged: control.puzzles.isNotEmpty
                   ? (value) {
                       if (value != null) {
-                        onPuzzleChanged(control.groups.indexOf(value));
+                        onPuzzleChanged(control.puzzles.indexOf(value));
                       }
                     }
                   : null, // disables dropdown if empty

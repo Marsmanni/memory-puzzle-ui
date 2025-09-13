@@ -4,14 +4,16 @@ import 'package:provider/provider.dart';
 import '../dtos/api_dtos.dart';
 import '../models/game_statistics.dart';
 import '../models/settings.dart';
+import '../services/auth_helper.dart';
 import '../services/api_service.dart';
 import '../services/game_manager.dart';
 import '../utils/api_endpoints.dart';
 import '../utils/app_localizations.dart';
 import '../utils/constants.dart';
 import '../widgets/play_page_app_bar.dart';
-import '../widgets/puzzle_card.dart';
+import '../widgets/puzzle_grid.dart';
 
+/// Main PlayPage widget for the Memory Puzzle game.
 class PlayPage extends StatefulWidget {
   const PlayPage({super.key});
 
@@ -19,32 +21,64 @@ class PlayPage extends StatefulWidget {
   State<PlayPage> createState() => _PlayPageState();
 }
 
+/// State class for PlayPage.
+/// Handles game initialization, settings changes, loading overlays, and congratulation logic.
 class _PlayPageState extends State<PlayPage> {
+  // --- Services & Managers ---
   final ApiService _apiService = ApiService();
+  final AuthInfo _authInfo = AuthInfo();
+  late final GameSettings gameSettings;
+  late final GameManager gameManager;
+  late final GameControls gameStatistics;
 
-  late final GameSettings settings;
-
-  List<PuzzleDto> _groups = [];
-  int _selectedPuzzleIndex = 0;
+  // --- UI State ---
   bool _loading = false;
   String? _error;
   bool _congratulationShown = false;
 
+  // --- Lifecycle ---
   @override
   void initState() {
     super.initState();
-    settings = GameSettings(
+
+    // Get GameManager from Provider
+    gameManager = Provider.of<GameManager>(context);
+
+    // Initialize game settings
+    gameSettings = GameSettings(
       languageCode: 'de',
       isSoundMuted: true,
       selectedPlaceholderIndex: 0,
     );
-    settings.onSettingChanged = _onSettingsChanged;
+
+    // Listen for settings changes
+    gameSettings.onSettingChanged = _onSettingsChanged;
+
+    // Initialize game statistics
+    gameStatistics = GameControls(
+      puzzles: [],
+      selectedPuzzleIndex: -1,
+      playerCount: gameManager.playerStats.playerCount,
+      moves: gameManager.playerStats.moves,
+      matches: gameManager.playerStats.matches,
+      currentPlayer: gameManager.playerStats.currentPlayer,
+    );
+
+    // Preload assets and fetch puzzle data after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _preloadPlaceholders();
       _fetchGroupsAndImages();
     });
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final gameManager = Provider.of<GameManager>(context);
+    gameManager.addListener(_checkGameFinished);
+  }
+
+  // --- Settings Change Handler ---
   void _onSettingsChanged(String key, dynamic value) {
     switch (key) {
       case GameSettings.keyLanguageChanged:
@@ -59,65 +93,14 @@ class _PlayPageState extends State<PlayPage> {
         });
         break;
       case GameSettings.keyPlaceholderChanged:
-        setState(() {
-        });
+        setState(() {});
         break;
       default:
         break;
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final gameManager = Provider.of<GameManager>(context);
-
-    final gameStatistics = GameControls(
-      groups: _groups,
-      selectedPuzzleIndex: _selectedPuzzleIndex,
-      playerCount: gameManager.playerStats.playerCount,
-      moves: gameManager.playerStats.moves,
-      matches: gameManager.playerStats.matches,
-      currentPlayer: gameManager.playerStats.currentPlayer,
-    );
-
-    return Scaffold(
-      appBar: PlayPageAppBar(
-        control: gameStatistics,
-        settings: settings,
-        onReset: _initializeGame,
-        onPlayerCountChanged: (count) {
-          gameManager.onPlayerCountChanged(count);
-          _initializeGame();
-        },
-        onPuzzleChanged: (index) {
-          setState(() {
-            _selectedPuzzleIndex = index;
-          });
-          _initializeGame();
-        },
-      ),
-      body: Stack(
-        children: [
-          _error != null
-              ? Center(child: Text(_error!))
-              : PuzzleGrid(
-                  key: ValueKey(settings.selectedAsset),
-                  gameManager: gameManager,
-                  gameSettings: settings,
-                ),
-          PlayPageLoadingOverlay(loading: _loading),
-        ],
-      ),
-    );
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final gameManager = Provider.of<GameManager>(context);
-    gameManager.addListener(_checkGameFinished);
-  }
-    
+  // --- Game Finished Check ---
   void _checkGameFinished() {
     final gameManager = Provider.of<GameManager>(context, listen: false);
     if (gameManager.isGameFinished && !_congratulationShown) {
@@ -139,8 +122,9 @@ class _PlayPageState extends State<PlayPage> {
     }
   }
 
+  // --- Asset Preloading ---
   void _preloadPlaceholders() {
-    for (final placeholder in settings.placeholders) {
+    for (final placeholder in gameSettings.placeholders) {
       precacheImage(
         AssetImage('${placeholder['asset']}'),
         context,
@@ -148,6 +132,17 @@ class _PlayPageState extends State<PlayPage> {
     }
   }
 
+  void _precacheImages(PuzzleDto? selectedPuzzle) {
+    final images = selectedPuzzle?.images ?? [];
+    for (final img in images) {
+      final imgUrl = AppConstants.replace(ApiEndpoints.imagesGetById, {
+        'id': img.imageUid,
+      });
+      precacheImage(NetworkImage(imgUrl), context);
+    }
+  }
+
+  // --- Data Fetching ---
   Future<void> _fetchGroupsAndImages() async {
     setState(() {
       _loading = true;
@@ -158,11 +153,9 @@ class _PlayPageState extends State<PlayPage> {
       final puzzles = await _apiService.fetchPuzzlesDefaults();
       if (!mounted) return;
       setState(() {
-        _groups = puzzles;
-        _selectedPuzzleIndex = puzzles.isNotEmpty ? 0 : -1;
         _loading = false;
       });
-      if (_selectedPuzzleIndex >= 0 && _groups.isNotEmpty) {
+      if (puzzles.isNotEmpty) {
         _initializeGame();
       }
     } catch (e) {
@@ -180,69 +173,51 @@ class _PlayPageState extends State<PlayPage> {
     }
   }
 
+  // --- Game Initialization ---
   void _initializeGame() {
-    final gameManager = Provider.of<GameManager>(context, listen: false);
-    final selectedPuzzle = (_selectedPuzzleIndex >= 0 && _groups.isNotEmpty)
-        ? _groups[_selectedPuzzleIndex]
-        : null;
     gameManager.initializeGame(
-      selectedPuzzle?.images ?? [],
-      puzzleId: selectedPuzzle?.id ?? 0,
-      currentUser: '',
+      puzzle: gameStatistics.getSelectedPuzzle(),
+      currentUser: _authInfo.user ?? 'Guest',
     );
-    _precacheImages(selectedPuzzle);
+    _precacheImages(gameStatistics.getSelectedPuzzle());
   }
 
-  void _precacheImages(PuzzleDto? selectedPuzzle) {
-    final images = selectedPuzzle?.images ?? [];
-    for (final img in images) {
-      final imgUrl = AppConstants.replace(ApiEndpoints.imagesGetById, {
-        'id': img.imageUid,
-      });
-      precacheImage(NetworkImage(imgUrl), context);
-    }
-  }
-}
-
-class PuzzleGrid extends StatelessWidget {
-  final GameManager gameManager;
-  final GameSettings gameSettings;
-
-  const PuzzleGrid({
-    required this.gameManager,
-    required this.gameSettings,
-    super.key,
-  });
-
+  // --- UI Build ---
   @override
   Widget build(BuildContext context) {
-    if (gameManager.isGridEmpty) {
-      return Container();
-    }
-    return GridView.builder(
-      padding: const EdgeInsets.all(16),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 6,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
+    return Scaffold(
+      appBar: PlayPageAppBar(
+        control: gameStatistics,
+        settings: gameSettings,
+        onReset: () => _initializeGame(),
+        onPlayerCountChanged: (count) {
+          gameManager.onPlayerCountChanged(count);
+          _initializeGame();
+        },
+        onPuzzleChanged: (index) {
+          setState(() {
+            gameStatistics.selectedPuzzleIndex = index;
+          });
+          () => _initializeGame();
+        },
       ),
-      itemCount: gameManager.imageCount * 2,
-      itemBuilder: (context, index) {
-        final imgUid = gameManager.getShuffledImageUid(index);
-        final imgUrl = AppConstants.replace(ApiEndpoints.imagesGetById, {
-          'id': imgUid,
-        });
-        return PuzzleCard(
-          key: ValueKey('${gameSettings.selectedAsset}_$index'),
-          imgUrl: imgUrl,
-          state: gameManager.getCardState(index),
-          placeholderAsset: gameSettings.selectedAsset,
-        );
-      },
+      body: Stack(
+        children: [
+          _error != null
+              ? Center(child: Text(_error!))
+              : PuzzleGrid(
+                  key: ValueKey(gameSettings.selectedAsset),
+                  gameManager: gameManager,
+                  gameSettings: gameSettings,
+                ),
+          PlayPageLoadingOverlay(loading: _loading),
+        ],
+      ),
     );
   }
 }
 
+/// Loading overlay widget for PlayPage.
 class PlayPageLoadingOverlay extends StatelessWidget {
   final bool loading;
   const PlayPageLoadingOverlay({required this.loading, super.key});

@@ -1,15 +1,15 @@
 import '../dtos/api_dtos.dart';
 
 class GameControls {
-  final List<PuzzleDto> groups;
-  final int selectedPuzzleIndex;
+  List<PuzzleDto>? puzzles;
+  int selectedPuzzleIndex;
   final int playerCount;
   final List<int> moves;
   final List<int> matches;
   final int currentPlayer;
 
   GameControls({
-    required this.groups,
+    required this.puzzles,
     required this.selectedPuzzleIndex,
     required this.playerCount,
     required this.moves,
@@ -17,11 +17,14 @@ class GameControls {
     required this.currentPlayer,
   });
 
+  set setPuzzles(List<PuzzleDto> value) => puzzles = value;
+  set setSelectedPuzzleIndex(int value) => selectedPuzzleIndex = value;
+
   PuzzleDto? getSelectedPuzzle() {
-    if (groups.isNotEmpty &&
+    if (puzzles.isNotEmpty &&
         selectedPuzzleIndex >= 0 &&
-        selectedPuzzleIndex < groups.length) {
-      return groups[selectedPuzzleIndex];
+        selectedPuzzleIndex < puzzles.length) {
+      return puzzles[selectedPuzzleIndex];
     }
     return null;
   }

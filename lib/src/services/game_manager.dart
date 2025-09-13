@@ -15,7 +15,7 @@ class GameManager extends ChangeNotifier {
   final PlayerStats _playerStats = PlayerStats();
 
   // --- Game state ---
-  List<PuzzleImageDto> _images = [];
+  late PuzzleDto _puzzle;
   late List<bool> _flipped;
   List<int>? _shuffledIndexes;
   final List<int> _selectedIndexes = [];
@@ -35,12 +35,9 @@ class GameManager extends ChangeNotifier {
 
   // --- Getters for UI ---
   PlayerStats get playerStats => _playerStats;
-  int get imageCount => _images.length;
-  bool get isGameFinished =>
-      (_flipped.isNotEmpty && _matchedIndexes.length == _flipped.length);
-       _matchedIndexes.length == _flipped.length);
-  bool get isGridEmpty =>
-      (_shuffledIndexes == null || _shuffledIndexes!.isEmpty) || _images.isEmpty;
+  int get imageCount => _puzzle.images.length;
+  bool get isGameFinished => (_flipped.isNotEmpty && _matchedIndexes.length == _flipped.length);
+  bool get isGridEmpty => (_shuffledIndexes == null || _shuffledIndexes!.isEmpty) || _puzzle.images.isEmpty;
 
   set isSoundMuted(bool value) {
     if (_isSoundMuted != value) {
@@ -61,10 +58,10 @@ class GameManager extends ChangeNotifier {
 
   /// Returns the shuffled [PuzzleImageDto] for the card at [index].
   PuzzleImageDto? getShuffledImage(int index) {
-    if (_shuffledIndexes == null || _shuffledIndexes!.isEmpty || _images.isEmpty) return null;
+    if (_shuffledIndexes == null || _shuffledIndexes!.isEmpty || _puzzle.images.isEmpty) return null;
     final imgIndex = _shuffledIndexes![index];
-    if (imgIndex < 0 || imgIndex >= _images.length) return null;
-    return _images[imgIndex];
+    if (imgIndex < 0 || imgIndex >= _puzzle.images.length) return null;
+    return _puzzle.images[imgIndex];
   }
 
   /// Returns the [CardState] for the card at [index].
@@ -84,21 +81,19 @@ class GameManager extends ChangeNotifier {
 
   /// Initializes a new game with the given images and parameters.
   void initializeGame(
-    List<PuzzleImageDto> images, {
-    required int puzzleId,
+  {
+    PuzzleDto? puzzle,
     required String currentUser,
-    String mode = 'standard',
+    String mode = 'standard', 
   }) {
-    _images = images;
-    _flipped = List<bool>.filled(_images.length * 2, false);
-    _shuffledIndexes = List<int>.generate(_images.length * 2, (i) => i % _images.length);
+    _flipped = List<bool>.filled(_puzzle.images.length * 2, false);
+    _shuffledIndexes = List<int>.generate(_puzzle.images.length * 2, (i) => i % _puzzle.images.length);
     _shuffledIndexes!.shuffle(Random());
     _selectedIndexes.clear();
     _matchedIndexes.clear();
     _isProcessingMove = false;
     _playerStats.currentPlayer = 0;
     _playStartTime = DateTime.now();
-    _puzzleId = puzzleId;
     _currentUser = currentUser;
     _mode = mode;
     _drawOrder = [];
