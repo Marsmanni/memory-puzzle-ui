@@ -98,6 +98,7 @@ class GameManager extends ChangeNotifier {
     _mode = mode;
     _drawOrder = [];
     notifyListeners();
+    playSound("intro_sound");
   }
 
   /// Resets the game. Call initializeGame from UI to reset and start a new game.
@@ -118,6 +119,8 @@ class GameManager extends ChangeNotifier {
     if (_isProcessingMove || _flipped[index] || _matchedIndexes.contains(index) || _selectedIndexes.length == 2) {
       return;
     }
+
+    await playSound("realistic_flip");
 
     _flipped[index] = true;
     _selectedIndexes.add(index);
@@ -149,14 +152,7 @@ class GameManager extends ChangeNotifier {
             drawOrder: _drawOrder.join(','),
             mode: _mode,
           );
-          try {
-            if (!_isSoundMuted) {
-              final source = AssetSource('sounds/fanfare.mp3');
-              await _audioPlayer.play(source);
-            }
-          } catch (e) {
-            Log.e('Failed to play fanfare: $e');
-          }
+          await playSound("fanfare");
           notifyListeners();
           // Show congratulation (call from UI after notifyListeners)
         }
@@ -168,10 +164,21 @@ class GameManager extends ChangeNotifier {
           _selectedIndexes.clear();
           _isProcessingMove = false;
           _playerStats.nextPlayer();
-          notifyListeners();
+          //notifyListeners();
         });
       }
     }
-    notifyListeners();
+    //notifyListeners();
+  }
+
+  Future<void> playSound(String name) async {
+    try {
+      if (!_isSoundMuted) {
+        final source = AssetSource('sounds/$name.mp3');
+        await _audioPlayer.play(source);
+      }
+    } catch (e) {
+      Log.e('Failed to play sound: $e');
+    }
   }
 }
