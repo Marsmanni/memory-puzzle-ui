@@ -28,6 +28,7 @@ class GameManager extends ChangeNotifier {
   final List<int> _selectedIndexes = [];
   final Set<int> _matchedIndexes = {};
   bool _isProcessingMove = false;
+  bool _isShaking = false;
 
   // --- Sound ---
   final AudioPlayer _audioPlayer = AudioPlayer();
@@ -69,6 +70,7 @@ class GameManager extends ChangeNotifier {
       isMatched: _matchedIndexes.contains(index),
       isFlipped: _flipped[index],
       isDisabled: isCardDisabled(index),
+      isShaking: _isShaking,
       onTap: () => onCardTap(index),
     );
   }
@@ -78,16 +80,37 @@ class GameManager extends ChangeNotifier {
   // --- Game initialization & reset ---
 
   /// Initializes a new game with the given images and parameters.
-  void initializeGame(
+  Future<void> initializeGame(
   {
     PuzzleDto? puzzle,
     required String currentUser,
     String mode = 'standard', 
-  }) {
+  }) async {
     if (puzzle == null || puzzle.images.isEmpty) {
       return;
     }
     _puzzle = puzzle;
+
+    // Check if any card is currently flipped before resetting
+    final anyCardFlipped = _flipped.any((f) => f);
+
+     _flipped = List<bool>.filled(_puzzle!.images.length * 2, false);
+    _selectedIndexes.clear();
+    _matchedIndexes.clear();
+    if (anyCardFlipped) {
+      // Wait for the flip animation to finish (e.g., 300ms)
+      await Future.delayed(const Duration(milliseconds: 300));
+    }
+
+
+    // Trigger shake animation
+    _isShaking = true;
+    notifyListeners();
+    await Future.delayed(const Duration(seconds: 1));
+    _isShaking = false;
+    notifyListeners();
+
+    // Now shuffle and reset as usual
     _flipped = List<bool>.filled(_puzzle!.images.length * 2, false);
     _shuffledIndexes = List<int>.generate(_puzzle!.images.length * 2, (i) => i % _puzzle!.images.length);
     _shuffledIndexes!.shuffle(Random());
