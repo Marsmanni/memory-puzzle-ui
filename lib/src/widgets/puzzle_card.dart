@@ -36,11 +36,17 @@ class _PuzzleCardState extends State<PuzzleCard> with SingleTickerProviderStateM
     _shakeAnimation = Tween<double>(begin: begin, end: end)
         .chain(CurveTween(curve: Curves.elasticIn))
         .animate(_shakeController);
+
+    shake();
   }
 
   @override
   void didUpdateWidget(covariant PuzzleCard oldWidget) {
     super.didUpdateWidget(oldWidget);
+    shake();
+  }
+
+  void shake() {
     if (widget.state.isShaking) {
       _shakeController.forward(from: 0);
     } else {

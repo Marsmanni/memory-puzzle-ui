@@ -1,4 +1,6 @@
-import 'dart:math';
+import 'dart:math' hide log;
+import 'dart:developer';
+
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
@@ -58,21 +60,24 @@ class GameManager extends ChangeNotifier {
 
   /// Returns the shuffled [PuzzleImageDto] for the card at [index].
   PuzzleImageDto? getShuffledImage(int index) {
-    if (_shuffledIndexes == null || _shuffledIndexes!.isEmpty || _puzzle!.images.isEmpty ?? true) return null;
+    if (_shuffledIndexes == null || _shuffledIndexes!.isEmpty || index < 0 || index >= (_shuffledIndexes?.length ?? 0)) return null;
     final imgIndex = _shuffledIndexes![index];
     if (imgIndex < 0 || imgIndex >= _puzzle!.images.length) return null;
-    return _puzzle! .images[imgIndex];
+    return _puzzle!.images[imgIndex];
   }
 
   /// Returns the [CardState] for the card at [index].
-  CardState getCardState(int index) {
-    return CardState(
+  CardState? getCardState(int index) {
+    if (index >= 0 && index < _flipped.length) {
+      return CardState(
       isMatched: _matchedIndexes.contains(index),
       isFlipped: _flipped[index],
       isDisabled: isCardDisabled(index),
       isShaking: _isShaking,
       onTap: () => onCardTap(index),
     );
+    }
+    return null;
   }
   /// Constructor
   //GameManager();
@@ -102,7 +107,6 @@ class GameManager extends ChangeNotifier {
       await Future.delayed(const Duration(milliseconds: 300));
     }
 
-
     // Trigger shake animation
     _isShaking = true;
     notifyListeners();
@@ -112,6 +116,7 @@ class GameManager extends ChangeNotifier {
 
     // Now shuffle and reset as usual
     _flipped = List<bool>.filled(_puzzle!.images.length * 2, false);
+    // log("Creating shuffled indexes for ${_puzzle!.images.length} images.");
     _shuffledIndexes = List<int>.generate(_puzzle!.images.length * 2, (i) => i % _puzzle!.images.length);
     _shuffledIndexes!.shuffle(Random());
     _selectedIndexes.clear();
@@ -122,7 +127,6 @@ class GameManager extends ChangeNotifier {
     _currentUser = currentUser;
     _mode = mode;
     _drawOrder = [];
-    //notifyListeners();
     playSound("intro_sound");
   }
   

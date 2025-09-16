@@ -51,38 +51,39 @@ class AppBarActions extends StatelessWidget {
                   value: 'logout',
                   child: Text(AppLocalizations.get('logout')),
                 ),
-                const PopupMenuDivider(),
-                PopupMenuItem(
-                  value: 'play',
-                  child: ListTile(
-                    leading: const Icon(Icons.play_arrow),
-                    title: Text(AppLocalizations.get('play')),
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'crop',
-                  child: ListTile(
-                    leading: const Icon(Icons.crop),
-                    title: Text(AppLocalizations.get('crop')),
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'create',
-                  child: ListTile(
-                    leading: const Icon(Icons.create),
-                    title: Text(AppLocalizations.get('create')),
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'users',
-                  child: ListTile(
-                    leading: const Icon(Icons.people),
-                    title: Text(AppLocalizations.get('users')),
-                  ),
-                ),
-                if (auth.role == 'admin')
+                if (auth.role == 'writer' || auth.role == 'admin') ...[
                   const PopupMenuDivider(),
-                if (auth.role == 'admin')
+                  PopupMenuItem(
+                    value: 'play',
+                    child: ListTile(
+                      leading: const Icon(Icons.play_arrow),
+                      title: Text(AppLocalizations.get('play')),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'crop',
+                    child: ListTile(
+                      leading: const Icon(Icons.crop),
+                      title: Text(AppLocalizations.get('crop')),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'create',
+                    child: ListTile(
+                      leading: const Icon(Icons.create),
+                      title: Text(AppLocalizations.get('create')),
+                    ),
+                  ),
+                ],
+                if (auth.role == 'admin') ...[
+                  PopupMenuItem(
+                    value: 'users',
+                    child: ListTile(
+                      leading: const Icon(Icons.people),
+                      title: Text(AppLocalizations.get('users')),
+                    ),
+                  ),
+                  const PopupMenuDivider(),
                   PopupMenuItem(
                     value: 'systemInfo',
                     child: ListTile(
@@ -90,6 +91,7 @@ class AppBarActions extends StatelessWidget {
                       title: Text(AppLocalizations.get('systemInfo')),
                     ),
                   ),
+                ],
               ],
               onSelected: (value) async {
                 if (value == 'logout') {

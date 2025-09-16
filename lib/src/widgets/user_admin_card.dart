@@ -11,15 +11,19 @@ class UserAdminCard extends StatelessWidget {
     return Card(
       child: ListTile(
         title: Text(user.username),
-        subtitle: Text(
-          '${AppLocalizations.get('userAdminCard.puzzles')}: ${user.puzzleCount}\n'
-          '${AppLocalizations.get('userAdminCard.roles')}: ${user.roles.join(", ")}'
-        ),
-        trailing: Text(
-          user.lastLogin != null
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('${AppLocalizations.get('userAdminCard.puzzles')}: ${user.puzzleCount}'),
+            Text('${AppLocalizations.get('userAdminCard.roles')}: ${user.roles.join(", ")}'),
+            if (user.roles.contains('reader'))
+              Text('${AppLocalizations.get('userAdminCard.relatedWriters')}: ${user.relatedWriters.join(", ")}'),
+            Text(user.lastLogin != null
               ? '${AppLocalizations.get('userAdminCard.lastLogin')}: ${user.lastLogin}'
-              : AppLocalizations.get('userAdminCard.neverLoggedIn'),
+              : AppLocalizations.get('userAdminCard.neverLoggedIn'))
+          ],
         ),
+        trailing: Text(''),
       ),
     );
   }

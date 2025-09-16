@@ -37,6 +37,7 @@ class MemoryApp extends StatefulWidget {
 
 class _MemoryAppState extends State<MemoryApp> {
   AuthInfo _authInfo = AuthInfo();
+  final GlobalKey<PlayPageState> playPageKey = GlobalKey<PlayPageState>();
 
   @override
   void initState() {
@@ -55,16 +56,28 @@ class _MemoryAppState extends State<MemoryApp> {
       builder: (ctx) => LoginDialog(
         onLoginSuccess: (authInfo) async {
           await AuthHelper.saveAuthInfo(authInfo);
+          // reload puzzles for the new user
           setState(() {
             _authInfo = authInfo;
           });
+          // After successful login
+          _loadPuzzles();
+          final playPageState = playPageKey.currentState;
+          playPageState?.fetchGroupsAndImages();
         },
       ),
     );
   }
 
+  void _loadPuzzles() {
+    final playPageState = playPageKey.currentState;
+    playPageState?.fetchGroupsAndImages();
+  }
+
   void _logout() async {
     await AuthHelper.clearAuthInfo();
+    _selectedIndex = 0;
+    _loadPuzzles();
     if (mounted) setState(() => _authInfo = AuthInfo());
   }
 
@@ -121,7 +134,7 @@ class _MemoryAppState extends State<MemoryApp> {
   /// Each page is protected according to the user's role and authentication status.
   Widget _buildBody() {
     if (_selectedIndex == 0) {
-      return const PlayPage();
+      return PlayPage(key: playPageKey);
     }
 
     if (_selectedIndex == 1) {

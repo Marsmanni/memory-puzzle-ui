@@ -42,6 +42,7 @@ class AppLocalizations {
       'userAdminCard.puzzles': 'Puzzles',
       'userAdminCard.username': 'Benutzername',
       'userAdminCard.roles': 'Rollen',
+      'userAdminCard.relatedWriters': 'Autoren',
       'userAdminCard.lastLogin': 'Letzter Login',
       'userAdminCard.neverLoggedIn': 'Nie eingeloggt',
 
@@ -159,6 +160,7 @@ ERWEITERTE STEUERUNG:
       // Widgets
       'userAdminCard.puzzles': 'Puzzles',
       'userAdminCard.roles': 'Roles',
+      'userAdminCard.relatedWriters': 'Writers',
       'userAdminCard.username': 'Username',
       'userAdminCard.lastLogin': 'Last login',
       'userAdminCard.neverLoggedIn': 'Never logged in',

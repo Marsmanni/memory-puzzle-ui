@@ -299,12 +299,14 @@ class SystemInfoDto {
 class UserAdminDto {
   String username;
   List<String> roles;
+  List<String> relatedWriters;
   DateTime? lastLogin;
   int puzzleCount;
 
   UserAdminDto({
     required this.username,
     required this.roles,
+    required this.relatedWriters,
     this.lastLogin,
     required this.puzzleCount,
   });
@@ -312,6 +314,7 @@ class UserAdminDto {
   factory UserAdminDto.fromJson(Map<String, dynamic> json) => UserAdminDto(
     username: json['username'] ?? '',
     roles: (json['roles'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
+    relatedWriters: (json['relatedWriters'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
     lastLogin: json['lastLogin'] != null ? DateTime.parse(json['lastLogin']) : null,
     puzzleCount: json['puzzleCount'] ?? 0,
   );
@@ -319,6 +322,7 @@ class UserAdminDto {
   Map<String, dynamic> toJson() => {
     'username': username,
     'roles': roles,
+    'relatedWriters': relatedWriters,
     'lastLogin': lastLogin?.toIso8601String(),
     'puzzleCount': puzzleCount,
   };

@@ -17,12 +17,12 @@ class PlayPage extends StatefulWidget {
   const PlayPage({super.key});
 
   @override
-  State<PlayPage> createState() => _PlayPageState();
+  State<PlayPage> createState() => PlayPageState();
 }
 
 /// State class for PlayPage.
 /// Handles game initialization, settings changes, loading overlays, and congratulation logic.
-class _PlayPageState extends State<PlayPage> {
+class PlayPageState extends State<PlayPage> {
   // --- Services & Managers ---
   final ApiService _apiService = ApiService();
   final AuthInfo _authInfo = AuthInfo();
@@ -53,7 +53,7 @@ class _PlayPageState extends State<PlayPage> {
     // Preload assets and fetch puzzle data after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _preloadPlaceholders();
-      _fetchGroupsAndImages();
+      fetchGroupsAndImages();
     });
   }
 
@@ -81,10 +81,10 @@ class _PlayPageState extends State<PlayPage> {
     switch (key) {
       case PlayPageAppBar.keyPuzzleChanged:
         if (value is int) {
-          setState(() {
-            gameManager.gamePuzzles.setSelectedPuzzleIndex = value;
-          });
+          gameManager.gamePuzzles.setSelectedPuzzleIndex = value;
+          //var selectedPuzzle = gameManager.gamePuzzles.getSelectedPuzzle();
           _initializeGame();
+           //_congratulationShown = false;
         }
         break;
       case PlayPageAppBar.keyPlayerCountChanged:
@@ -145,22 +145,26 @@ class _PlayPageState extends State<PlayPage> {
   }
 
   // --- Data Fetching ---
-  Future<void> _fetchGroupsAndImages() async {
+  Future<void> fetchGroupsAndImages() async {
     setState(() {
       _loading = true;
       _error = null;
     });
 
     try {
-      final puzzles = await _apiService.fetchPuzzlesDefaults();
+      final jwt = await AuthHelper.getJwt();
+      final isLoggedIn = jwt != null && jwt.isNotEmpty;
+
+      final puzzles = isLoggedIn 
+          ? await _apiService.fetchPuzzlesByUser()
+          : await _apiService.fetchPuzzlesDefaults();
+
       if (!mounted) return;
       setState(() {
         _loading = false;
       });
       if (puzzles.isNotEmpty) {
-        // Initialize game statistics
         gameManager.gamePuzzles.puzzles = puzzles;
-
         _initializeGame();
       }
     } catch (e) {
@@ -180,12 +184,15 @@ class _PlayPageState extends State<PlayPage> {
 
   // --- Game Initialization ---
   void _initializeGame() {
-    var selectedPuzzle = gameManager.gamePuzzles.getSelectedPuzzle();
+    if (gameManager.gamePuzzles.puzzles!.isEmpty) return;
+    PuzzleDto? selectedPuzzle = gameManager.gamePuzzles.getSelectedPuzzle();
+
+    _precacheImages(selectedPuzzle);
+
     gameManager.initializeGame(
       puzzle: selectedPuzzle,
       currentUser: _authInfo.user ?? 'Guest',
     );
-    _precacheImages(selectedPuzzle);
     setState(() {
       _congratulationShown = false;
     });

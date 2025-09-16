@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -31,15 +33,25 @@ class PuzzleGrid extends StatelessWidget {
       itemCount: gameManager.imageCount * 2,
       itemBuilder: (context, index) {
         final imgUid = gameManager.getShuffledImageUid(index);
+        final state = gameManager.getCardState(index);
+
+        // image url still might be ''
         final imgUrl = AppConstants.replace(ApiEndpoints.imagesGetById, {
           'id': imgUid,
         });
-        return PuzzleCard(
-          key: ValueKey('${gameSettings.selectedAsset}_$index'),
-          imgUrl: imgUrl,
-          state: gameManager.getCardState(index),
-          placeholderAsset: gameSettings.selectedAsset,
-        );
+
+        //log("Building card $index with image UID: $imgUid and URL: $imgUrl");
+        if (state == null) {
+          return const SizedBox.shrink();
+        }
+        else {
+          return PuzzleCard(
+            key: ValueKey('${gameSettings.selectedAsset}_$index'),
+            imgUrl: imgUrl,
+            state: state,
+            placeholderAsset: gameSettings.selectedAsset,
+          );
+        }
       },
     );
   }
